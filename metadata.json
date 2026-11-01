@@ -1,0 +1,6 @@
+{
+  "name": "حصن الأذكار اليومية | Hisn Al-Adhkar",
+  "description": "تطبيق متكامل لأذكار المسلم اليومية موثقة بمصادرها التراثية المعتمدة (صحيح البخاري ومسلم، الأذكار للنووي، وحصن المسلم) مع سبحة تفاعلية وتخريج الأحاديث.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
