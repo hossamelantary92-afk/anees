@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { build } from 'esbuild';
+const root = process.cwd();
+let html = fs.readFileSync(path.join(root,'dist/app.html'),'utf8');
+const script = html.match(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/);
+const css = html.match(/<link\b[^>]*href="([^"]+\.css)"[^>]*>/);
+if (!script || !css) throw new Error('Missing built application assets');
+const assetPath = file => path.resolve(root,'dist',file.replace(/^\.?\//,''));
+const bundled = await build({entryPoints:[assetPath(script[1])],bundle:true,format:'iife',write:false,minify:true,target:'es2020'});
+const js = bundled.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');
+const style = fs.readFileSync(assetPath(css[1]),'utf8').replace(/<\/style/gi,'<\\/style');
+html = html.replace(script[0],'').replace(css[0],() => `<style>${style}</style>`);
+// The standalone app must not depend on root-relative assets or a module fetch.
+html = html.replace(/<link[^>]*(?:rel="manifest"|rel="icon")[^>]*>/g,'');
+html = html.replace('<div id="root"></div>','<div id="root"><p style="text-align:center;padding:3rem;font-family:sans-serif">جارٍ فتح الأذكار…</p></div>');
+html = html.replace('</body>',() => `<script>${js}</script></body>`);
+fs.writeFileSync(path.join(root,'dist/index.html'),html);
+fs.writeFileSync(path.join(root,'index.html'),html);
+console.log('Standalone index.html generated: opens directly and on static hosting.');
