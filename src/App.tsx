@@ -1,3 +1,4 @@
+import { PrayerRadio } from './components/PrayerRadio';
 import { WorshipSection } from './components/WorshipSection';
 import { archiveAdhkar } from './utils/worship';
 import { storage } from './utils/storage';
@@ -168,7 +169,7 @@ export default function App() {
   const displayCounts = Object.fromEntries(ALL_ADHKAR.map(d => [d.id, remainingCounts[prayerKey(d.id)] ?? d.count]));
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#0B1120] text-stone-900 dark:text-stone-100 flex flex-col font-tajawal transition-colors selection:bg-emerald-200 dark:selection:bg-emerald-900">
+    <div className="min-h-screen bg-[#F8F1E5] dark:bg-[#092D26] text-stone-900 dark:text-stone-100 flex flex-col font-tajawal transition-colors selection:bg-emerald-200 dark:selection:bg-emerald-900">
       {/* Top Header */}
       <Header
         activeTab={activeTab}
@@ -183,6 +184,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1">
+        {activeTab === 'adhkar' && <PrayerRadio />}
         <div hidden={activeTab !== 'adhkar' && activeTab !== 'favorites'}>
           <AdhkarSection
             favoritesOnly={activeTab === 'favorites'}
