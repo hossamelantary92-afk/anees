@@ -18,6 +18,6 @@ export const ReadingBookmark:React.FC<Props>=({position,legacy,onSave})=>{
  <button type="submit" disabled={!valid} className="w-full mt-3 min-h-12 rounded-xl bg-emerald-800 text-white font-bold">حفظ الموضع</button></form>
  {position&&<div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-sm leading-loose"><p>المحفوظ: سورة {SURAHS[position.surah-1].name} — الآية {position.ayah}</p><p className="font-bold">{next?`الاستكمال: سورة ${SURAHS[next.surah-1].name} — الآية ${next.ayah}`:'وصلت إلى نهاية سورة الناس.'}</p></div>}
  <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300 mt-2">{status}</p>
- <p className="text-xs text-stone-500 mt-2">علامة قراءة واحدة مشتركة لكل الأيام، مستقلة عن الحفظ والمراجعة.</p>
+
  </section>;
 };

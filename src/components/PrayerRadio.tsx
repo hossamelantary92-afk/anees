@@ -1,3 +1,4 @@
+import {formatCalendarDate,calendarPreference} from '../utils/calendar';
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Radio, Play, Pause, Moon, Clock3, LocateFixed } from 'lucide-react';
 
@@ -16,8 +17,8 @@ export function PrayerRadio(){
  const [loading,setLoading]=useState(false);
  const [sleep,setSleep]=useState(0);
  const audio=useRef<HTMLAudioElement>(null);
- const [calendar,setCalendar]=useState(()=>localStorage.getItem('anees_calendar')==='hijri'?'hijri':'gregory');
- useEffect(()=>{const update=()=>setCalendar(localStorage.getItem('anees_calendar')==='hijri'?'hijri':'gregory');window.addEventListener('anees-calendar-change',update);return()=>window.removeEventListener('anees-calendar-change',update);},[]);
+ const [calendar,setCalendar]=useState(()=>calendarPreference());
+ useEffect(()=>{const update=()=>setCalendar(calendarPreference());window.addEventListener('anees-calendar-change',update);return()=>window.removeEventListener('anees-calendar-change',update);},[]);
  const [day,setDay]=useState(new Date().toLocaleDateString('en-CA'));
  useEffect(()=>{const id=window.setInterval(()=>{setNow(Date.now());setDay(new Date().toLocaleDateString('en-CA'));},1000);return()=>clearInterval(id);},[]);
  useEffect(()=>{localStorage.setItem('anees_prayer_location',JSON.stringify(loc));const ctl=new AbortController();setError('');setTimes([]);
@@ -35,7 +36,7 @@ export function PrayerRadio(){
  return <section className="anees-dashboard" dir="rtl" aria-label="مواقيت الصلاة وإذاعة القرآن">
  <div className="anees-welcome"><div><span className="anees-eyebrow">رفيقك في الذكر والعبادة</span><h1>أنيس <span>✦</span></h1><p>جعل الله يومك مباركًا</p></div><div className="anees-location"><MapPin size={17}/><select aria-label="اختر المدينة" value={cities.some(c=>c.label===loc.label)?loc.label:'custom'} onChange={e=>{const c=cities.find(x=>x.label===e.target.value);if(c)setLoc(c);}}><option value="custom" disabled>{loc.label}</option>{cities.map(c=><option key={c.label} value={c.label}>{c.label}</option>)}</select><button onClick={locate} title="تحديد موقعي" aria-label="تحديد موقعي"><LocateFixed size={19}/></button></div></div>
  <div className="anees-next"><div className="anees-lantern">☪</div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || 'جاري تحديد المواقيت'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
- <div className="anees-times"><div className="anees-section-heading"><h2>مواقيت الصلاة اليوم</h2><span>{new Date(now).toLocaleDateString(calendar==='hijri'?'ar-SA-u-ca-islamic-umalqura':'ar-SA-u-ca-gregory',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div><div className="anees-prayer-grid">{names.map((n,i)=>{const t=times.find(x=>x.key===n.key);return <div className={`anees-prayer ${next?.key===n.key?'upcoming':''}`} key={n.key}><span className="anees-prayer-icon">{['☾','☀','☼','◒','☽'][i]}</span><strong>{n.name}</strong><span dir="ltr">{t?.time || '--:--'}</span></div>;})}</div><small>المواقيت حسابية وقد تختلف قليلًا عن تقويم المسجد المحلي.</small></div>
+ <div className="anees-times"><div className="anees-section-heading"><h2>مواقيت الصلاة اليوم</h2><span>{formatCalendarDate(new Date(now),calendar)}</span></div><div className="anees-prayer-grid">{names.map((n,i)=>{const t=times.find(x=>x.key===n.key);return <div className={`anees-prayer ${next?.key===n.key?'upcoming':''}`} key={n.key}><span className="anees-prayer-icon">{['☾','☀','☼','◒','☽'][i]}</span><strong>{n.name}</strong><span dir="ltr">{t?.time || '--:--'}</span></div>;})}</div><small>المواقيت حسابية وقد تختلف قليلًا عن تقويم المسجد المحلي.</small></div>
  <div className="anees-radio"><div className="anees-radio-heading"><Radio size={24}/><div><h2>إذاعة القرآن الكريم من القاهرة</h2><span>بث مباشر عبر الإنترنت</span></div></div><div className="anees-radio-controls"><button className="anees-play" onClick={toggle} disabled={loading} aria-label={playing?'إيقاف الإذاعة':'تشغيل الإذاعة'}>{playing?<Pause fill="currentColor"/>:<Play fill="currentColor"/>}</button><div className="anees-radio-wave" aria-hidden="true">▂ ▄ ▆ ▃ ▇ ▅ ▂ ▆ ▄ ▇ ▃ ▅ ▂ ▇ ▄ ▆ ▃ ▅ ▂ ▆</div><label><Moon size={15}/><select value={sleep} aria-label="مؤقت النوم" onChange={e=>setSleep(Number(e.target.value))}><option value={0}>مؤقت النوم</option><option value={15}>15 دقيقة</option><option value={30}>30 دقيقة</option><option value={60}>60 دقيقة</option></select></label></div><audio ref={audio} preload="none" onPause={()=>setPlaying(false)} onPlaying={()=>setPlaying(true)} onError={()=>{setPlaying(false);setError('تعذّر الاتصال ببث الإذاعة.');}} /></div>
  {error&&<p className="anees-error" role="status">{error}</p>}
  </section>;

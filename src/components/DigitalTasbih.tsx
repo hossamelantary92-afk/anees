@@ -40,6 +40,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
   const [customPhrase, setCustomPhrase] = useState<string>('');
   const [savedPhrases, setSavedPhrases] = useState<string[]>(() => {try {const v=JSON.parse(storage.getItem('anees_saved_tasbih')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,30):[];}catch{return [];}});
   const [saveMessage,setSaveMessage]=useState('');
+  useEffect(()=>{if(!saveMessage)return;const id=window.setTimeout(()=>setSaveMessage(''),3000);return()=>window.clearTimeout(id);},[saveMessage]);
   const savePhrase=()=>{const phrase=customPhrase.trim();if(!phrase)return;const updated=[phrase,...savedPhrases.filter(v=>v!==phrase)].slice(0,30);setSavedPhrases(updated);storage.setItem('anees_saved_tasbih',JSON.stringify(updated));setSelectedPhrase(phrase);setIsCustomMode(false);setSaveMessage('تم حفظ الذكر');};
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
   const [target, setTarget] = useState<number>(33);
