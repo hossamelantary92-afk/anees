@@ -184,7 +184,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {activeTab === 'adhkar' && <PrayerRadio />}
+        <div hidden={activeTab !== 'adhkar'}><PrayerRadio /></div>
         <div hidden={activeTab !== 'adhkar' && activeTab !== 'favorites'}>
           <AdhkarSection
             favoritesOnly={activeTab === 'favorites'}
@@ -218,41 +218,11 @@ export default function App() {
         onClose={() => setSelectedDhikrForModal(null)}
       />
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">
-          <div>
-            <p className="font-semibold text-stone-700 dark:text-stone-300">
-              حصن الأذكار اليومية الموثقة
-            </p>
-            <p className="mt-0.5">
-              نصوص من الكتاب والسنة مع مراجع للرجوع إليها
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 text-stone-600 dark:text-stone-400">
-            <button
-              onClick={() => setActiveTab('adhkar')}
-              className="hover:underline"
-            >
-              الأوراد
-            </button>
-            <span aria-hidden="true">·</span>
-            <button
-              onClick={() => setActiveTab('tasbih')}
-              className="hover:underline"
-            >
-              السبحة
-            </button>
-            <span aria-hidden="true">·</span>
-            <button
-              onClick={() => setActiveTab('favorites')}
-              className="hover:underline"
-            >
-              المفضلة
-            </button>
-          </div>
-        </div>
+      {/* Compact brand footer: navigation is already available above/on mobile */}
+      <footer className="anees-brand-footer" aria-label="هوية التطبيق">
+        <span className="anees-brand-mark" aria-hidden="true">✦</span>
+        <strong>أنيس</strong><span>رفيقك في الذكر والعبادة</span>
+        <small>أذكار يومية موثقة من الكتاب والسنة</small>
       </footer>
     </div>
   );

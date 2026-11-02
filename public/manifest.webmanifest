@@ -1,1 +1,19 @@
-{"name":"حصن الأذكار اليومية","short_name":"حصن الأذكار","lang":"ar","dir":"rtl","start_url":"./","scope":"./","display":"standalone","background_color":"#FAF8F5","theme_color":"#065f46","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{
+  "name": "أنيس | رفيقك في الذكر والعبادة",
+  "short_name": "أنيس",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f1e5",
+  "theme_color": "#103e31",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

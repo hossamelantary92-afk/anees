@@ -38,6 +38,9 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
 
   const [selectedPhrase, setSelectedPhrase] = useState<string>(PRESET_PHRASES[0]);
   const [customPhrase, setCustomPhrase] = useState<string>('');
+  const [savedPhrases, setSavedPhrases] = useState<string[]>(() => {try {const v=JSON.parse(storage.getItem('anees_saved_tasbih')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,30):[];}catch{return [];}});
+  const [saveMessage,setSaveMessage]=useState('');
+  const savePhrase=()=>{const phrase=customPhrase.trim();if(!phrase)return;const updated=[phrase,...savedPhrases.filter(v=>v!==phrase)].slice(0,30);setSavedPhrases(updated);storage.setItem('anees_saved_tasbih',JSON.stringify(updated));setSelectedPhrase(phrase);setIsCustomMode(false);setSaveMessage('تم حفظ الذكر');};
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
   const [target, setTarget] = useState<number>(33);
   const [totalLifetime, setTotalLifetime] = useState<number>(() => {
@@ -137,6 +140,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
             ))}
           </div>
 
+          {saveMessage && <span role="status" className="text-xs text-emerald-700">{saveMessage}</span>}
           {/* More Phrases Dropdown or Custom */}
           <div className="mt-3 flex items-center gap-2">
             <select
@@ -152,7 +156,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
               className="w-full text-xs py-2 px-3 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-200 focus:outline-hidden focus:border-emerald-600 font-tajawal"
             >
               <option value="custom">✍️ إدخال ذكر أو دعاء مخصص...</option>
-              {PRESET_PHRASES.map((phrase) => (
+              {[...savedPhrases,...PRESET_PHRASES].filter((v,i,a)=>a.indexOf(v)===i).map((phrase) => (
                 <option key={phrase} value={phrase}>
                   {phrase}
                 </option>
@@ -161,13 +165,13 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
           </div>
 
           {isCustomMode && (
-            <input
+            <div className="anees-custom-entry"><input
               type="text"
               value={customPhrase}
               onChange={(e) => setCustomPhrase(e.target.value)}
               placeholder="اكتب صيغة الذكر هنا (مثال: أستغفر الله العظيم، لا حول ولا قوة إلا بالله)..."
               className="mt-2 w-full text-sm py-2 px-3 rounded-lg border border-emerald-500/50 bg-emerald-50/20 dark:bg-emerald-950/20 text-stone-900 dark:text-stone-100 focus:outline-hidden font-amiri"
-            />
+            /><button type="button" onClick={savePhrase} disabled={!customPhrase.trim()} className="anees-save-dhikr"><Check size={17}/> حفظ الذكر</button></div>
           )}
         </div>
 
