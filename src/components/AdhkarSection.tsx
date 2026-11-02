@@ -31,25 +31,31 @@ function saved<T,>(key: string, fallback: T): T {
 export const AdhkarSection: React.FC<Props> = props => {
  const [favoriteView,setFavoriteView]=useState<'adhkar'|'reciters'>('adhkar');
  const [selectedCategory, setCategory] = useState('morning');
- useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setCategory(category); setQuery(''); setFilter('all'); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
+ useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setCategory(category); setQuery(''); setDisplaySettings(p=>({...p,adhkar:{...p.adhkar,filter:'all'}})); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
  const category = props.favoritesOnly ? 'favorites' : selectedCategory;
- const [mode, setMode] = useState<'list' | 'focus'>(() => saved('hisn_mode','focus'));
+ const [displaySettings,setDisplaySettings]=useState(()=>{
+  const defaults={mode:'focus' as 'list'|'focus',filter:'all' as 'all'|'pending'|'completed',autoNext:false};
+  const read=(key:string,fallback:typeof defaults)=>{try{const v=JSON.parse(storage.getItem(key)||'null');return v&&['list','focus'].includes(v.mode)&&['all','pending','completed'].includes(v.filter)&&typeof v.autoNext==='boolean'?{mode:v.mode as typeof defaults.mode,filter:v.filter as typeof defaults.filter,autoNext:v.autoNext}:fallback;}catch{return fallback;}};
+  return {adhkar:read('hisn_display_adhkar',{...defaults,mode:saved('hisn_mode','focus'),autoNext:saved('hisn_auto',false)}),favorites:read('hisn_display_favorites',defaults)};
+ });
+ const scope=props.favoritesOnly?'favorites':'adhkar';
+ const {mode,filter,autoNext}=displaySettings[scope];
+ const setMode=(mode:'list'|'focus')=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],mode}}));
+ const setFilter=(filter:'all'|'pending'|'completed')=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],filter}}));
+ const setAutoNext=(autoNext:boolean)=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],autoNext}}));
  const [positions, setPositions] = useState<Record<string, number>>(() => ({...saved<Record<string,number>>('hisn_positions',{}), 'morning:all':0}));
  const [favorites, setFavorites] = useState<string[]>(() => saved('hisn_favorites',[]));
  const [query, setQuery] = useState('');
- const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
- const [autoNext, setAutoNext] = useState(() => saved('hisn_auto',false));
  const [prayer, setPrayer] = useState(() => saved('hisn_prayer','الفجر'));
  const [searchOpen,setSearchOpen]=useState(false);
  const [toolsOpen,setToolsOpen]=useState(false);
  const [confirmReset, setConfirmReset] = useState(false);
  useEffect(() => { storage.setItem('hisn_category',JSON.stringify(category)); },[category]);
- useEffect(() => { storage.setItem('hisn_mode',JSON.stringify(mode)); },[mode]);
+ useEffect(() => { storage.setItem('hisn_display_adhkar',JSON.stringify(displaySettings.adhkar)); storage.setItem('hisn_display_favorites',JSON.stringify(displaySettings.favorites)); },[displaySettings]);
  useEffect(() => { storage.setItem('hisn_positions',JSON.stringify(positions)); },[positions]);
  useEffect(() => { storage.setItem('hisn_favorites',JSON.stringify(favorites)); },[favorites]);
- useEffect(() => { storage.setItem('hisn_auto',JSON.stringify(autoNext)); },[autoNext]);
  useEffect(() => { storage.setItem('hisn_prayer',JSON.stringify(prayer)); window.dispatchEvent(new Event('hisn-prayer')); },[prayer]);
- useEffect(() => { setQuery(''); setFilter('all'); setConfirmReset(false); setToolsOpen(false); setSearchOpen(false); }, [props.favoritesOnly]);
+ useEffect(() => { setQuery(''); setConfirmReset(false); setToolsOpen(false); setSearchOpen(false); }, [props.favoritesOnly]);
  const meta = DHIKR_CATEGORIES.find(c => c.id === category);
  const base = useMemo(() => ALL_ADHKAR.filter(d => query.trim() ? (!props.favoritesOnly || favorites.includes(d.id)) && normalize([d.title,d.text,d.source,d.narrator].join(' ')).includes(normalize(query.trim())) : category === 'favorites' ? favorites.includes(d.id) : d.category === category && (d.id !== 'p-ilm' || prayer === 'الفجر')),[category,query,favorites,prayer,props.favoritesOnly]);
  const rows = base.filter(d => filter === 'all' || (filter === 'completed' ? (props.remainingCounts[d.id] ?? d.count) === 0 : (props.remainingCounts[d.id] ?? d.count) > 0));
