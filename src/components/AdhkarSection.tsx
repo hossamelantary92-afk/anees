@@ -4,6 +4,7 @@ import { Search, Sun, Moon, Bed, Sunrise, Compass, HeartHandshake, Heart, BookOp
 import { DHIKR_CATEGORIES, ALL_ADHKAR, DhikrItem } from '../data/adhkarData';
 import { DhikrCard } from './DhikrCard';
 interface Props {
+ favoritesOnly?: boolean;
  remainingCounts: Record<string, number>;
  onCountDecrement: (id: string) => void;
  onReset: (id: string) => void;
@@ -26,10 +27,11 @@ function saved<T,>(key: string, fallback: T): T {
  } catch { return fallback; }
 }
 export const AdhkarSection: React.FC<Props> = props => {
- const hour = new Date().getHours();
- const [category, setCategory] = useState(() => saved('hisn_category', hour >= 4 && hour < 12 ? 'morning' : hour >= 15 && hour < 21 ? 'evening' : 'sleep'));
+ const [selectedCategory, setCategory] = useState('morning');
+ useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setCategory(category); setQuery(''); setFilter('all'); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
+ const category = props.favoritesOnly ? 'favorites' : selectedCategory;
  const [mode, setMode] = useState<'list' | 'focus'>(() => saved('hisn_mode','focus'));
- const [positions, setPositions] = useState<Record<string, number>>(() => saved('hisn_positions',{}));
+ const [positions, setPositions] = useState<Record<string, number>>(() => ({...saved<Record<string,number>>('hisn_positions',{}), 'morning:all':0}));
  const [favorites, setFavorites] = useState<string[]>(() => saved('hisn_favorites',[]));
  const [query, setQuery] = useState('');
  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -43,8 +45,9 @@ export const AdhkarSection: React.FC<Props> = props => {
  useEffect(() => { storage.setItem('hisn_favorites',JSON.stringify(favorites)); },[favorites]);
  useEffect(() => { storage.setItem('hisn_auto',JSON.stringify(autoNext)); },[autoNext]);
  useEffect(() => { storage.setItem('hisn_prayer',JSON.stringify(prayer)); window.dispatchEvent(new Event('hisn-prayer')); },[prayer]);
+ useEffect(() => { setQuery(''); setFilter('all'); setConfirmReset(false); setCategoriesOpen(false); }, [props.favoritesOnly]);
  const meta = DHIKR_CATEGORIES.find(c => c.id === category);
- const base = useMemo(() => ALL_ADHKAR.filter(d => query.trim() ? normalize([d.title,d.text,d.source,d.narrator].join(' ')).includes(normalize(query.trim())) : category === 'favorites' ? favorites.includes(d.id) : d.category === category && (d.id !== 'p-ilm' || prayer === 'الفجر')),[category,query,favorites,prayer]);
+ const base = useMemo(() => ALL_ADHKAR.filter(d => query.trim() ? (!props.favoritesOnly || favorites.includes(d.id)) && normalize([d.title,d.text,d.source,d.narrator].join(' ')).includes(normalize(query.trim())) : category === 'favorites' ? favorites.includes(d.id) : d.category === category && (d.id !== 'p-ilm' || prayer === 'الفجر')),[category,query,favorites,prayer,props.favoritesOnly]);
  const rows = base.filter(d => filter === 'all' || (filter === 'completed' ? (props.remainingCounts[d.id] ?? d.count) === 0 : (props.remainingCounts[d.id] ?? d.count) > 0));
  const completed = base.filter(d => (props.remainingCounts[d.id] ?? d.count) === 0).length;
  const progress = base.length ? Math.round(completed / base.length * 100) : 0;
@@ -60,11 +63,11 @@ export const AdhkarSection: React.FC<Props> = props => {
  const icons: Record<string, React.ReactNode> = { morning:<Sun size={17}/>,evening:<Moon size={17}/>,sleep:<Bed size={17}/>,wakeUp:<Sunrise size={17}/>,afterPrayer:<Compass size={17}/>,dailyDuas:<HeartHandshake size={17}/> };
  const btn = 'px-4 py-2.5 rounded-xl text-sm border border-stone-200 dark:border-stone-700 transition-colors';
  return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-   <div className="mb-6 flex items-center justify-between gap-4"><div><p className="text-xs text-emerald-700 dark:text-emerald-400 mb-1">مساحة هادئة للذكر</p><h1 className="text-2xl sm:text-3xl font-bold">أذكار ترافق يومك</h1></div><span className="text-xs text-stone-500 whitespace-nowrap">{ALL_ADHKAR.length} ذكرًا ودعاءً</span></div>
-   <button className="md:hidden category-picker mb-3" aria-expanded={categoriesOpen} aria-controls="category-options" onClick={() => setCategoriesOpen(!categoriesOpen)}><span>القسم: {meta?.name || 'المفضلة'}</span><span>{categoriesOpen?'إغلاق':'تغيير القسم'}</span></button>
+   <div className="mb-6 flex items-center justify-between gap-4"><div><p className="text-xs text-emerald-700 dark:text-emerald-400 mb-1">مساحة هادئة للذكر</p><h1 className="text-2xl sm:text-3xl font-bold">{props.favoritesOnly ? 'أذكارك المفضلة' : 'أذكار ترافق يومك'}</h1></div><span className="text-xs text-stone-500 whitespace-nowrap">{ALL_ADHKAR.length} ذكرًا ودعاءً</span></div>
+   {!props.favoritesOnly && <><button className="md:hidden category-picker mb-3" aria-expanded={categoriesOpen} aria-controls="category-options" onClick={() => setCategoriesOpen(!categoriesOpen)}><span>القسم: {meta?.name || 'المفضلة'}</span><span>{categoriesOpen?'إغلاق':'تغيير القسم'}</span></button>
    <div id="category-options" className={`${categoriesOpen?'grid':'hidden'} grid-cols-2 md:flex md:flex-wrap gap-2 pb-3 mb-4`} aria-label="أقسام الأذكار">
-     {[...DHIKR_CATEGORIES,{id:'favorites',name:'المفضلة'}].map(cat => <button key={cat.id} onClick={() => {setCategory(cat.id);setCategoriesOpen(false);setQuery('');setFilter('all');setConfirmReset(false);}} className={`${btn} inline-flex items-center gap-2 min-h-12 text-right justify-start ${category === cat.id ? 'bg-emerald-800 text-white border-emerald-800' : 'bg-white dark:bg-[#121A2D]'}`}>{icons[cat.id] || <Heart size={17}/>} {cat.name}</button>)}
-   </div>
+     {DHIKR_CATEGORIES.map(cat => <button key={cat.id} onClick={() => {setCategory(cat.id);setCategoriesOpen(false);setQuery('');setFilter('all');setConfirmReset(false);}} className={`${btn} inline-flex items-center gap-2 min-h-12 text-right justify-start ${category === cat.id ? 'bg-emerald-800 text-white border-emerald-800' : 'bg-white dark:bg-[#121A2D]'}`}>{icons[cat.id] || <Heart size={17}/>} {cat.name}</button>)}
+   </div></>}
    <div className="bg-white dark:bg-[#121A2D] border border-stone-200 dark:border-stone-800 rounded-2xl p-5 mb-5">
      <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold text-xl">{query ? 'نتائج البحث' : meta?.name || 'أذكارك المفضلة'}</h2><p className="text-sm text-stone-500 mt-2">{query ? `${base.length} نتيجة` : category === 'favorites' ? 'أذكار حفظتها للوصول السريع' : meta?.description}</p></div>{!query && category !== 'favorites' && <button onClick={() => setConfirmReset(v => !v)} className="p-3 text-stone-400" aria-label="إعادة الورد"><RotateCcw size={18}/></button>}</div>
      {confirmReset && <div className="mt-4 flex flex-wrap gap-3 items-center text-sm"><span>بدء الورد من جديد؟</span><button className={btn} onClick={() => {props.onResetCategory(category);setConfirmReset(false);move(0);}}>نعم، ابدأ من جديد</button><button className={btn} onClick={() => setConfirmReset(false)}>إلغاء</button></div>}

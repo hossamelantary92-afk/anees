@@ -55,3 +55,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
  .category-picker { display:flex; }
  .card-utilities { width:100%; justify-content:flex-end; }
 }
+
+.worship-input { min-height:48px; padding:10px 12px; border-radius:12px; border:1px solid #d6d3d1; background:transparent; }
+.dark .worship-input { border-color:#44403c; }
+.worship-check { min-height:56px; padding:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #e7e5e4; border-radius:14px; font-size:14px; text-align:right; }
+.dark .worship-check { border-color:#292524; }
+.worship-checked { background:#ecfdf5; border-color:#059669; color:#065f46; }
+.dark .worship-checked { background:#064e3b; color:#d1fae5; border-color:#059669; }
+.check-box { min-width:22px; width:22px; height:22px; border:1px solid #a8a29e; border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.worship-checked .check-box { background:#047857; border-color:#047857; color:white; }
+@media(max-width:767px) { .mobile-navigation { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(min-width:768px) and (max-width:1023px) { header .nav-action { padding:8px; font-size:12px; } }

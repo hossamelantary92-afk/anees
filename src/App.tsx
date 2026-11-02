@@ -1,3 +1,5 @@
+import { WorshipSection } from './components/WorshipSection';
+import { archiveAdhkar } from './utils/worship';
 import { storage } from './utils/storage';
 import { useState, useEffect, useCallback } from 'react';
 import { ALL_ADHKAR, DhikrItem } from './data/adhkarData';
@@ -47,7 +49,7 @@ export default function App() {
   });
 
   // Active top navigation tab
-  const [activeTab, setActiveTab] = useState<'adhkar' | 'tasbih' | 'sources'>('adhkar');
+  const [activeTab, setActiveTab] = useState<'adhkar' | 'worship' | 'favorites' | 'tasbih' | 'sources'>('adhkar');
 
   // Modal inspection state
   const [selectedDhikrForModal, setSelectedDhikrForModal] = useState<DhikrItem | null>(null);
@@ -73,6 +75,7 @@ export default function App() {
       }
     }
 
+    if (savedDate && savedCounts) { try { const parsed = JSON.parse(savedCounts); if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) archiveAdhkar(savedDate, parsed); } catch {} }
     // New day or fresh session: initialize counts
     const initial: Record<string, number> = {};
     ALL_ADHKAR.forEach((d) => {
@@ -106,10 +109,10 @@ export default function App() {
 
   // Persist counts
   useEffect(() => {
-    const today = localDay();
-    storage.setItem('adhkar_date', today);
+    storage.setItem('adhkar_date', countDate);
     storage.setItem('adhkar_remaining', JSON.stringify(remainingCounts));
-  }, [remainingCounts]);
+    archiveAdhkar(countDate, remainingCounts);
+  }, [remainingCounts, countDate]);
 
   const toggleDark = useCallback(() => {
     setIsDark((prev) => !prev);
@@ -180,8 +183,9 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {activeTab === 'adhkar' && (
+        <div hidden={activeTab !== 'adhkar' && activeTab !== 'favorites'}>
           <AdhkarSection
+            favoritesOnly={activeTab === 'favorites'}
             remainingCounts={displayCounts}
             onCountDecrement={handleCountDecrement}
             onReset={handleResetDhikr}
@@ -191,8 +195,9 @@ export default function App() {
             fontSize={fontSize}
             soundEnabled={soundEnabled}
           />
-        )}
+        </div>
 
+        {activeTab === 'worship' && <WorshipSection today={countDate} counts={displayCounts} onOpenAdhkar={(category) => { setActiveTab('adhkar'); window.dispatchEvent(new CustomEvent('hisn-open-category', {detail:category})); }} />}
         {activeTab === 'tasbih' && (
           <DigitalTasbih
             soundEnabled={soundEnabled}
@@ -239,10 +244,10 @@ export default function App() {
             </button>
             <span aria-hidden="true">·</span>
             <button
-              onClick={() => setActiveTab('sources')}
+              onClick={() => setActiveTab('favorites')}
               className="hover:underline"
             >
-              المصادر التراثية
+              المفضلة
             </button>
           </div>
         </div>
