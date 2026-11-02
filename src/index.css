@@ -66,3 +66,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .worship-checked .check-box { background:#047857; border-color:#047857; color:white; }
 @media(max-width:767px) { .mobile-navigation { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 @media(min-width:768px) and (max-width:1023px) { header .nav-action { padding:8px; font-size:12px; } }
+.tracker-panel { padding:18px; border:1px solid #e7e5e4; border-radius:18px; background:white; }
+.dark .tracker-panel { background:#121a2d; border-color:#292524; }
+.tracker-toast { position:fixed; bottom:calc(88px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:45; display:flex; align-items:center; gap:6px; width:max-content; max-width:calc(100% - 24px); padding:6px 10px; background:#064e3b; color:white; border-radius:16px; box-shadow:0 6px 24px #0003; font-size:13px; }
+@media(min-width:768px){.tracker-toast{bottom:24px;}}
+/* Native select popups must use the same foreground and background palette. */
+:root { color-scheme:light; }
+html.dark { color-scheme:dark; }
+select { color:#1c1917; background-color:#fff; color-scheme:light; }
+select option, select optgroup { color:#1c1917; background-color:#fff; }
+select option:disabled { color:#78716c; }
+.dark select { color:#f5f5f4; background-color:#121a2d; color-scheme:dark; }
+.dark select option, .dark select optgroup { color:#f5f5f4; background-color:#121a2d; }
+.dark select option:disabled { color:#a8a29e; }
+
+.adhkar-selector { position:sticky; top:var(--hisn-header-height,72px); z-index:30; display:flex; align-items:center; gap:14px; margin:0 -4px 10px; padding:10px 4px; background:#faf8f5; border-bottom:1px solid #e7e5e4; }
+.dark .adhkar-selector { background:#0b1120; border-color:#292524; }
+.adhkar-selector select { border-radius:14px; min-height:48px; }
