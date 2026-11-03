@@ -451,7 +451,6 @@ select option:disabled { color:#78716c; }
   color:#f8edcf;
 }
 .dark .anees-worship-tabs button:not([aria-pressed="true"]) {color:#d2c4aa;}
-.dark .tracker-panel .dark\\:bg-stone-900 {background-color:#103b31;}
 .dark .tracker-panel [class~="dark:bg-stone-900"] {background-color:#103b31;}
 .dark .tracker-panel [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.22);}
 .dark .tracker-panel .text-stone-500 {color:#cbbda1;}
