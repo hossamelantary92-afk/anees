@@ -357,3 +357,30 @@ select option:disabled { color:#78716c; }
 .dark .tracker-toast{background:#173e32;color:#f5e7c3;border-color:#bda66f;}
 .dark .tracker-toast-emblem{background:#bca063;color:#123e30;}
 .dark .tracker-toast .tracker-toast-undo{background:#2b5843;color:#f5e7c3;border-color:#50745c;}
+
+/* v2.25 — iPhone installed PWA: never place controls behind the status bar.
+   black-translucent + viewport-fit=cover draws into the notch unless the
+   sticky header owns the top safe-area inset. */
+@media (max-width:767px) and (display-mode:standalone) {
+  header.sticky {
+    padding-top:env(safe-area-inset-top, 0px);
+    background-color:#103e31;
+  }
+  .mobile-navigation,
+  .dark .mobile-navigation {
+    background:#103e31;
+    border-top:1px solid rgba(201,166,92,.45);
+  }
+}
+/* Keep the navigation palette consistent in dark mode on Safari as well. */
+@media (max-width:767px) {
+  .dark .mobile-navigation {
+    background:#103e31;
+    border-top-color:rgba(201,166,92,.45);
+  }
+  .dark .mobile-navigation .nav-action { color:#f0e4c7; }
+  .dark .mobile-navigation .nav-active {
+    background:#f5e6c5;
+    color:#103e31;
+  }
+}
