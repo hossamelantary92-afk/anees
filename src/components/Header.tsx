@@ -10,6 +10,14 @@ export const Header:React.FC<HeaderProps> = p => {
  const [calendar,setCalendar]=useState<'gregory'|'hijri'>(()=>localStorage.getItem('anees_calendar')==='hijri'?'hijri':'gregory');
  const updateCalendar=(value:'gregory'|'hijri')=>{setCalendar(value);localStorage.setItem('anees_calendar',value);window.dispatchEvent(new Event('anees-calendar-change'));};
  const headerRef=useRef<HTMLElement>(null);
+ useEffect(()=>{
+   if(!open)return;
+   const closeOutside=(event:PointerEvent)=>{if(headerRef.current && !headerRef.current.contains(event.target as Node))setOpen(false);};
+   const closeEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')setOpen(false);};
+   document.addEventListener('pointerdown',closeOutside);
+   document.addEventListener('keydown',closeEscape);
+   return()=>{document.removeEventListener('pointerdown',closeOutside);document.removeEventListener('keydown',closeEscape);};
+ },[open]);
  useEffect(()=>{const node=headerRef.current;if(!node)return;const update=()=>document.documentElement.style.setProperty('--hisn-header-height',`${node.getBoundingClientRect().height}px`);update();const observer=new ResizeObserver(update);observer.observe(node);return()=>observer.disconnect();},[]);
  const tabs=[{id:'adhkar' as const,label:'الأذكار',Icon:BookOpen},{id:'worship' as const,label:'عباداتي',Icon:CalendarCheck},{id:'favorites' as const,label:'المفضلة',Icon:Heart},{id:'tasbih' as const,label:'السبحة',Icon:CircleDot}];
  const nav=(mobile:boolean)=><nav aria-label={mobile?'التنقل على الجوال':'التنقل الرئيسي'} className={mobile?'mobile-navigation':'hidden md:flex gap-2'}>{tabs.map(({id,label,Icon})=><button key={id} aria-current={p.activeTab===id?'page':undefined} onClick={()=>p.setActiveTab(id)} className={`nav-action ${p.activeTab===id?'nav-active':''}`}><Icon size={21}/><span>{label}</span></button>)}</nav>;
