@@ -52,23 +52,31 @@ export default function App() {
   // Active top navigation tab
   const [activeTab, setActiveTab] = useState<'adhkar' | 'worship' | 'favorites' | 'tasbih' | 'sources'>('adhkar');
 
-  // Keep an independent scroll position for each top-level page. The content
-  // uses one document scroller, so preserve the previous tab before restoring
-  // the next one rather than letting the browser reuse the old scrollY.
+  // Capture the outgoing page BEFORE React swaps content. This prevents
+  // scroll clamping on short pages from overwriting the previous tab's position.
   const tabScrollPositions = useRef<Record<string, number>>({ adhkar: 0 });
   const previousTab = useRef(activeTab);
+  const restoringScroll = useRef(false);
+  const navigate = useCallback((tab: typeof activeTab) => {
+    if (tab === previousTab.current) return;
+    tabScrollPositions.current[previousTab.current] = window.scrollY;
+    restoringScroll.current = true;
+    setActiveTab(tab);
+  }, []);
   useEffect(() => {
-    const recordPosition = () => {
-      tabScrollPositions.current[previousTab.current] = window.scrollY;
-    };
-    window.addEventListener('scroll', recordPosition, { passive: true });
-    return () => window.removeEventListener('scroll', recordPosition);
+    const save = () => { if (!restoringScroll.current) tabScrollPositions.current[previousTab.current] = window.scrollY; };
+    window.addEventListener('scroll', save, { passive: true });
+    return () => window.removeEventListener('scroll', save);
   }, []);
   useLayoutEffect(() => {
     if (previousTab.current === activeTab) return;
-    tabScrollPositions.current[previousTab.current] = window.scrollY;
     previousTab.current = activeTab;
-    window.scrollTo({ top: tabScrollPositions.current[activeTab] ?? 0, behavior: 'instant' });
+    const target = tabScrollPositions.current[activeTab] ?? 0;
+    // iOS can apply scroll anchoring during a tab swap; restore on the next frame.
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'instant' });
+      window.requestAnimationFrame(() => { restoringScroll.current = false; });
+    });
   }, [activeTab]);
 
 
@@ -193,7 +201,7 @@ export default function App() {
       {/* Top Header */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={navigate}
         isDark={isDark}
         toggleDark={toggleDark}
         soundEnabled={soundEnabled}
@@ -219,7 +227,7 @@ export default function App() {
           />
         </div>
 
-        {activeTab === 'worship' && <WorshipSection today={countDate} counts={displayCounts} onOpenAdhkar={(category) => { setActiveTab('adhkar'); window.dispatchEvent(new CustomEvent('hisn-open-category', {detail:category})); }} />}
+        {activeTab === 'worship' && <WorshipSection today={countDate} counts={displayCounts} onOpenAdhkar={(category) => { navigate('adhkar'); window.dispatchEvent(new CustomEvent('hisn-open-category', {detail:category})); }} />}
         {activeTab === 'tasbih' && (
           <DigitalTasbih
             soundEnabled={soundEnabled}
