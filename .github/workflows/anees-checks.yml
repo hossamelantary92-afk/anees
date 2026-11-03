@@ -3,11 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [stability-ios-safe-recovery-20261103]
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+    branches: [main]
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -18,22 +14,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: TypeScript diagnostics
-        id: types
-        run: |
-          npm run lint > /tmp/anees-tsc.log 2>&1 || echo "failed=true" >> "$GITHUB_OUTPUT"
-          cat /tmp/anees-tsc.log
-      - name: Publish diagnostic output in PR
-        if: steps.types.outputs.failed == 'true' && github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          printf 'TypeScript diagnostics (CI):\n\n```\n' > /tmp/anees-comment.md
-          head -c 20000 /tmp/anees-tsc.log >> /tmp/anees-comment.md
-          printf '\n```\n' >> /tmp/anees-comment.md
-          gh pr comment 1 --body-file /tmp/anees-comment.md
-      - name: Enforce TypeScript
-        if: steps.types.outputs.failed == 'true'
-        run: exit 1
+      - run: npm run lint
       - run: npm test
       - run: npm run build
