@@ -154,7 +154,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
                   setSelectedPhrase(e.target.value);
                 }
               }}
-              className="w-full text-xs py-2 px-3 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-200 focus:outline-hidden focus:border-emerald-600 font-tajawal"
+              className="anees-tasbih-select w-full text-sm font-tajawal focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a65c]"
             >
               <option value="custom">✍️ إدخال ذكر أو دعاء مخصص...</option>
               {[...savedPhrases,...PRESET_PHRASES].filter((v,i,a)=>a.indexOf(v)===i).map((phrase) => (
