@@ -1,5 +1,5 @@
 import React,{useState,useEffect,useRef} from 'react';
-import {Check,Settings2,Download,Upload,ChevronRight,ChevronLeft,Sun,Moon,ArrowUp,ArrowDown,Undo2} from 'lucide-react';
+import {Check,ClipboardList,Download,Upload,ChevronRight,ChevronLeft,Sun,Moon,ArrowUp,ArrowDown,Undo2} from 'lucide-react';
 import {TrackerDialog} from './TrackerDialog';
 import {calendarPreference,formatCalendarDate,calendarMonth,moveCalendarMonth,CalendarKind} from '../utils/calendar';
 import {ReadingBookmark} from './ReadingBookmark';
@@ -73,7 +73,7 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  const order=[...plan.order||sectionOrder,...sectionOrder.filter(k=>!(plan.order||sectionOrder).includes(k))];
  const move=(index:number,n:number)=>{const next=[...order];[next[index],next[index+n]]=[next[index+n],next[index]];changePlan({order:next});};
  const stats=weeklyStats(data,day);
- return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-4"><div className="flex justify-between items-center gap-3"><div><p className="text-xs text-emerald-700 dark:text-emerald-400">خطوات صغيرة، ومواظبة كل يوم</p><h1 className="text-2xl font-bold mt-2">عباداتي</h1></div><button className="utility-action" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={20}/>خطتي</button></div>
+ return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-4"><div className="flex justify-between items-center gap-3"><div><p className="text-xs text-emerald-700 dark:text-emerald-400">خطوات صغيرة، ومواظبة كل يوم</p><h1 className="text-2xl font-bold mt-2">عباداتي</h1></div><button type="button" className="anees-plan-trigger" aria-expanded={settings} aria-label="فتح إعدادات خطتي" onClick={()=>setSettings(!settings)}><span className="anees-plan-icon" aria-hidden="true"><ClipboardList size={19} strokeWidth={1.85}/></span><span>خطتي</span></button></div>
  <div className="grid grid-cols-2 gap-2 bg-stone-100 dark:bg-stone-900 rounded-2xl p-1">{(['today','history'] as const).map((v,i)=><button key={v} aria-pressed={view===v} onClick={()=>{setView(v);setEditor(null);}} className={`min-h-12 rounded-xl ${view===v?'bg-white dark:bg-stone-800 font-bold shadow-sm':''}`}>{i?'السجل':'اليوم'}</button>)}</div>
  {message&&<p role="status" className="p-3 bg-amber-50 text-amber-900 rounded-xl text-sm">{message}</p>}
  {undo&&<div role="status" className="tracker-toast"><span>{undo.label}</span><button className="utility-action underline" onClick={()=>{setData(undo.data);setUndo(null);}}><Undo2 size={16}/>تراجع</button><button className="utility-action" aria-label="إغلاق رسالة التسجيل" onClick={()=>setUndo(null)}>×</button></div>}
