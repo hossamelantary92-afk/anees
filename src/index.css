@@ -197,3 +197,9 @@ select option:disabled { color:#78716c; }
 .dark .anees-welcome-location select{color:#f7e7bd}
 .anees-welcome-location button{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:34px;min-height:34px}
 @media(max-width:390px){.anees-welcome-location{gap:5px;padding:6px 8px}.anees-welcome-location select{min-width:95px;max-width:125px;font-size:13px}}
+
+/* City changes: preserve the previous complete prayer schedule until replacement arrives.
+   A subtle opacity transition replaces flashing placeholders or layout shifts. */
+.anees-prayer-transition { transition: opacity 240ms ease, filter 240ms ease; }
+.anees-prayer-updating { opacity: .76; filter: saturate(.88); }
+@media (prefers-reduced-motion: reduce) { .anees-prayer-transition { transition: none; } }
