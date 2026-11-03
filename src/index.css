@@ -263,3 +263,52 @@ select option:disabled { color:#78716c; }
 .dark .anees-plan-trigger:hover,.dark .anees-plan-trigger[aria-expanded="true"] {background:#235040}
 @media(max-width:400px) {.anees-plan-trigger{min-height:42px;padding-inline:7px;gap:6px;font-size:13px}.anees-plan-icon{width:29px;height:29px}}
 @media(prefers-reduced-motion:reduce){.anees-plan-trigger{transition:none}}
+
+/* iPhone PWA polish: reserve space for the fixed navigation only once.
+   Previous body padding plus footer padding left a pale strip and doubled the footer gap. */
+@media (max-width:767px) {
+  body { padding-bottom:0; background:#103e31; }
+  .anees-brand-footer {
+    padding:12px 14px calc(78px + env(safe-area-inset-bottom)) !important;
+    gap:5px !important;
+    border-top:1px solid rgba(201,166,92,.55);
+  }
+  .anees-brand-footer small { font-size:10px; }
+  .mobile-navigation {
+    border-top:1px solid rgba(201,166,92,.45);
+    box-shadow:0 -2px 0 #103e31;
+  }
+}
+/* A compact, accessible undo notification above the bottom navigation. */
+.tracker-toast {
+  direction:rtl;
+  max-width:min(90vw,400px);
+  gap:5px;
+  padding:6px 8px 6px 12px;
+  border:1px solid rgba(190,151,81,.75);
+  border-radius:16px;
+  background:#fffaf0;
+  color:#164b39;
+  box-shadow:0 7px 22px rgba(10,45,31,.18);
+  font-size:12px;
+  font-weight:600;
+}
+.tracker-toast .tracker-toast-check { flex:none; color:#137355; }
+.tracker-toast .tracker-toast-label { min-width:0; white-space:normal; }
+.tracker-toast .utility-action {
+  min-height:34px;
+  min-width:34px;
+  padding:4px 7px;
+  gap:4px;
+  border-radius:10px;
+  font-size:12px;
+}
+.tracker-toast .tracker-toast-undo { color:#165843; background:#e9f2e7; text-decoration:none; }
+.tracker-toast .tracker-toast-close { color:#6a756c; padding:4px; }
+@media(max-width:767px) {
+  .tracker-toast { bottom:calc(88px + env(safe-area-inset-bottom)); }
+}
+.dark .tracker-toast { background:#173e32; color:#f5e7c3; border-color:#bba062; }
+.dark .tracker-toast .tracker-toast-undo { background:#2c5845; color:#f5e7c3; }
+.dark .tracker-toast .tracker-toast-check { color:#d5bd79; }
+.dark .tracker-toast .tracker-toast-close { color:#e0d4b6; }
