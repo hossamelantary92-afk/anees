@@ -460,3 +460,29 @@ select option:disabled { color:#78716c; }
 .dark [class~="dark:bg-stone-800/80"] {background-color:#255641;}
 .dark [class~="dark:bg-stone-800"] {background-color:#255641;}
 .dark [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.25);}
+
+/* Anees GPS switch: clear feedback while iOS requests location permission. */
+.anees-location-feedback {
+  margin:0 4px 12px;
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(201,166,92,.14);
+  border:1px solid rgba(201,166,92,.35);
+  color:#174638;
+  font-size:13px;
+  line-height:1.65;
+}
+.anees-location-error {
+  color:#8a3c26;
+  background:#fff3e8;
+  border-color:#dfb598;
+}
+.dark .anees-location-feedback {
+  color:#f5e7c3;
+  background:rgba(201,166,92,.1);
+}
+.dark .anees-location-error {
+  color:#ffdcbe;
+  border-color:#bd8464;
+}
+.anees-location button:disabled {opacity:.5;cursor:progress;}
