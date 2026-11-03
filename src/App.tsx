@@ -2,7 +2,7 @@ import { PrayerRadio } from './components/PrayerRadio';
 import { WorshipSection } from './components/WorshipSection';
 import { archiveAdhkar } from './utils/worship';
 import { storage } from './utils/storage';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { ALL_ADHKAR, DhikrItem } from './data/adhkarData';
 import { Header } from './components/Header';
 import { AdhkarSection } from './components/AdhkarSection';
@@ -51,6 +51,26 @@ export default function App() {
 
   // Active top navigation tab
   const [activeTab, setActiveTab] = useState<'adhkar' | 'worship' | 'favorites' | 'tasbih' | 'sources'>('adhkar');
+
+  // Keep an independent scroll position for each top-level page. The content
+  // uses one document scroller, so preserve the previous tab before restoring
+  // the next one rather than letting the browser reuse the old scrollY.
+  const tabScrollPositions = useRef<Record<string, number>>({ adhkar: 0 });
+  const previousTab = useRef(activeTab);
+  useEffect(() => {
+    const recordPosition = () => {
+      tabScrollPositions.current[previousTab.current] = window.scrollY;
+    };
+    window.addEventListener('scroll', recordPosition, { passive: true });
+    return () => window.removeEventListener('scroll', recordPosition);
+  }, []);
+  useLayoutEffect(() => {
+    if (previousTab.current === activeTab) return;
+    tabScrollPositions.current[previousTab.current] = window.scrollY;
+    previousTab.current = activeTab;
+    window.scrollTo({ top: tabScrollPositions.current[activeTab] ?? 0, behavior: 'instant' });
+  }, [activeTab]);
+
 
   // Modal inspection state
   const [selectedDhikrForModal, setSelectedDhikrForModal] = useState<DhikrItem | null>(null);
