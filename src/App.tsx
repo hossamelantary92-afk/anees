@@ -56,13 +56,15 @@ export default function App() {
   // scroll clamping on short pages from overwriting the previous tab's position.
   const tabScrollPositions = useRef<Record<string, number>>({ adhkar: 0 });
   const previousTab = useRef(activeTab);
+  const restoringScroll = useRef(false);
   const navigate = useCallback((tab: typeof activeTab) => {
     if (tab === previousTab.current) return;
     tabScrollPositions.current[previousTab.current] = window.scrollY;
+    restoringScroll.current = true;
     setActiveTab(tab);
   }, []);
   useEffect(() => {
-    const save = () => { tabScrollPositions.current[previousTab.current] = window.scrollY; };
+    const save = () => { if (!restoringScroll.current) tabScrollPositions.current[previousTab.current] = window.scrollY; };
     window.addEventListener('scroll', save, { passive: true });
     return () => window.removeEventListener('scroll', save);
   }, []);
@@ -71,7 +73,10 @@ export default function App() {
     previousTab.current = activeTab;
     const target = tabScrollPositions.current[activeTab] ?? 0;
     // iOS can apply scroll anchoring during a tab swap; restore on the next frame.
-    window.requestAnimationFrame(() => window.scrollTo({ top: target, behavior: 'instant' }));
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'instant' });
+      window.requestAnimationFrame(() => { restoringScroll.current = false; });
+    });
   }, [activeTab]);
 
 
