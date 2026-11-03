@@ -362,8 +362,9 @@ select option:disabled { color:#78716c; }
    black-translucent + viewport-fit=cover draws into the notch unless the
    sticky header owns the top safe-area inset. */
 @media (max-width:767px) and (display-mode:standalone) {
+  /* iOS owns the non-translucent status-bar region; no extra header inset. */
   header.sticky {
-    padding-top:env(safe-area-inset-top, 0px);
+    padding-top:0;
     background-color:#103e31;
   }
   .mobile-navigation,
@@ -379,6 +380,29 @@ select option:disabled { color:#78716c; }
     border-top-color:rgba(201,166,92,.45);
   }
   .dark .mobile-navigation .nav-action { color:#f0e4c7; }
+  .dark .mobile-navigation .nav-active {
+    background:#f5e6c5;
+    color:#103e31;
+  }
+}
+
+/* v2.26 — darker footer separates chrome from the emerald content in both themes. */
+.anees-brand-footer {
+  background:#061d19 !important;
+  border-top-color:rgba(209,178,106,.62) !important;
+  color:#f4e1b8;
+}
+@media(max-width:767px) {
+  .mobile-navigation,
+  .dark .mobile-navigation {
+    background:#061d19 !important;
+    border-top-color:rgba(209,178,106,.62) !important;
+    box-shadow:0 -1px 0 #061d19;
+  }
+  /* Bottom navigation sits above its own reserved footer space. */
+  .mobile-navigation .nav-action,
+  .dark .mobile-navigation .nav-action { color:#efdfb9; }
+  .mobile-navigation .nav-active,
   .dark .mobile-navigation .nav-active {
     background:#f5e6c5;
     color:#103e31;
