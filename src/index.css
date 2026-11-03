@@ -200,9 +200,10 @@ select option:disabled { color:#78716c; }
 
 /* City changes: preserve the previous complete prayer schedule until replacement arrives.
    A subtle opacity transition replaces flashing placeholders or layout shifts. */
-.anees-prayer-transition { transition: opacity 240ms ease, filter 240ms ease; }
-.anees-prayer-updating { opacity: .76; filter: saturate(.88); }
-@media (prefers-reduced-motion: reduce) { .anees-prayer-transition { transition: none; } }
+/* Keep prayer cards fully opaque while refreshing; only the location icon signals loading. */
+.anees-location-locating svg { animation:anees-locating 1.5s ease-in-out infinite; }
+@keyframes anees-locating { 50% { transform:rotate(22deg); opacity:.65; } }
+@media (prefers-reduced-motion:reduce) { .anees-location-locating svg {animation:none;} }
 
 /* v2.22 — stronger identity hierarchy and elegant compact settings trigger */
 .anees-brand-title {
