@@ -16,11 +16,7 @@ jobs:
       - run: npm ci
       - name: TypeScript check
         run: npm run lint
-        continue-on-error: true
       - name: Worship tests
         run: npm test
-        if: always()
-        continue-on-error: true
       - name: Production build
         run: npm run build
-        if: always()
