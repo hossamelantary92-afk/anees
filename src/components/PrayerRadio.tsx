@@ -83,8 +83,8 @@ export function PrayerRadio(){
      setLocationError('');
      setLoc(previous=>
        previous.label==='موقعي الحالي' &&
-       Math.abs(previous.lat-coords.latitude)<0.0001 &&
-       Math.abs(previous.lon-coords.longitude)<0.0001
+       Math.abs(previous.lat-coords.latitude)<0.005 &&
+       Math.abs(previous.lon-coords.longitude)<0.005
          ? previous
          : {label:'موقعي الحالي',lat:coords.latitude,lon:coords.longitude}
      );
@@ -169,7 +169,7 @@ export function PrayerRadio(){
  useEffect(()=>{if(!('mediaSession' in navigator))return;try{navigator.mediaSession.metadata=new MediaMetadata({title:'إذاعة القرآن الكريم من القاهرة',artist:'أنيس',album:'بث مباشر'});navigator.mediaSession.setActionHandler('play',()=>{const a=audio.current;if(a)void a.play().catch(()=>{});});navigator.mediaSession.setActionHandler('pause',()=>{audio.current?.pause();});}catch{}return()=>{try{navigator.mediaSession.setActionHandler('play',null);navigator.mediaSession.setActionHandler('pause',null);}catch{}};},[]);
  const toggle=async()=>{const a=audio.current;if(!a)return;if(!a.paused){a.pause();setPlaying(false);return;}setLoading(true);setError('');try{a.src=RADIO[0];await a.play();setPlaying(true);}catch{setError('تعذّر تشغيل الإذاعة حاليًا. قد يكون مصدر البث غير متاح.');setPlaying(false);}finally{setLoading(false);}};
  useEffect(()=>{if(!sleep)return;const id=window.setTimeout(()=>{audio.current?.pause();setPlaying(false);setSleep(0);},sleep*60000);return()=>clearTimeout(id);},[sleep]);
- const locationControl=<div className="anees-location anees-welcome-location" dir="rtl"><MapPin size={17} aria-hidden="true"/><select aria-label="اختر المدينة أو موقعي الحالي" value={mode==='auto'?'auto':loc.label} onChange={e=>{if(e.target.value==='auto'){locate();return;}const c=cities.find(x=>x.label===e.target.value);if(c)setManualCity(c);}}><option value="auto">موقعي الحالي</option>{cities.map(c=><option key={c.label} value={c.label}>{c.label}</option>)}</select><button type="button" onClick={locate} disabled={locating} title={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-label={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-busy={locating} className={locating?'anees-location-locating':''}><LocateFixed size={18}/></button></div>;
+ const locationControl=<div className="anees-location anees-welcome-location" dir="rtl"><MapPin size={17} aria-hidden="true"/><select aria-label="اختر المدينة أو موقعي الحالي" value={mode==='auto'?'auto':loc.label} onChange={e=>{if(e.target.value==='auto'){locate();return;}const c=cities.find(x=>x.label===e.target.value);if(c)setManualCity(c);}}><option value="auto">موقعي الحالي</option>{cities.map(c=><option key={c.label} value={c.label}>{c.label}</option>)}</select><button type="button" onClick={locate} disabled={locating} title={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-label={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-busy={locating} className={locating||updatingPrayers?'anees-location-locating':''}><LocateFixed size={18}/></button></div>;
  return <><section className="anees-dashboard" dir="rtl" aria-label="مواقيت الصلاة وإذاعة القرآن">
  <div className="anees-welcome"><div><span className="anees-eyebrow">رفيقك في الذكر والعبادة</span><h1>أنيس <span>✦</span></h1><p>جعل الله يومك مباركًا</p></div>{locationControl}</div><span className="sr-only" role="status" aria-live="polite">{locating?'جاري تحديد موقعك الحالي…':updatingPrayers?'جاري تحديث مواقيت الصلاة':''}</span>{locationError&&<p className="anees-location-feedback anees-location-error" role="alert">{locationError}</p>}
  <div className="anees-next"><div className="anees-lantern">☪</div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || '—'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
