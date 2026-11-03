@@ -452,11 +452,12 @@ select option:disabled { color:#78716c; }
 }
 .dark .anees-worship-tabs button:not([aria-pressed="true"]) {color:#d2c4aa;}
 .dark .tracker-panel .dark\\:bg-stone-900 {background-color:#103b31;}
-.dark .tracker-panel .dark\\:border-stone-800 {border-color:rgba(201,166,92,.22);}
+.dark .tracker-panel [class~="dark:bg-stone-900"] {background-color:#103b31;}
+.dark .tracker-panel [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.22);}
 .dark .tracker-panel .text-stone-500 {color:#cbbda1;}
 .dark .tracker-panel .text-stone-400 {color:#c3b69b;}
-/* Tasbih: related dark-mode chips and statistics match its main emerald card. */
-.dark .bg-stone-900\\/60 {background-color:#103b31;}
-.dark .bg-stone-800\\/80 {background-color:#255641;}
-.dark .bg-stone-800 {background-color:#255641;}
-.dark .border-stone-800 {border-color:rgba(201,166,92,.25);}
+/* Tasbih dark-mode chips and statistics use emerald instead of navy. */
+.dark [class~="dark:bg-stone-900/60"] {background-color:#103b31;}
+.dark [class~="dark:bg-stone-800/80"] {background-color:#255641;}
+.dark [class~="dark:bg-stone-800"] {background-color:#255641;}
+.dark [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.25);}
