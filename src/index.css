@@ -191,3 +191,9 @@ select option:disabled { color:#78716c; }
  .anees-welcome-location { width:auto; }
  .anees-welcome-location select { max-width:100px; }
 }
+
+/* v2.18: one city option per name, explicit geolocation selection */
+.anees-welcome-location select{min-width:110px;max-width:155px;white-space:nowrap;text-overflow:ellipsis;font-weight:600;color:#103e31}
+.dark .anees-welcome-location select{color:#f7e7bd}
+.anees-welcome-location button{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:34px;min-height:34px}
+@media(max-width:390px){.anees-welcome-location{gap:5px;padding:6px 8px}.anees-welcome-location select{min-width:95px;max-width:125px;font-size:13px}}
