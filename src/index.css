@@ -408,3 +408,55 @@ select option:disabled { color:#78716c; }
     color:#103e31;
   }
 }
+
+/* v2.27 — emerald / gold surfaces in dark mode.
+   Main page stays #092D26, functional cards are #174638,
+   and the footer/nav remain darkest at #061D19. */
+.dark .tracker-panel {
+  background-color:#174638;
+  border-color:rgba(201,166,92,.38);
+  color:#f6ebd6;
+  box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+.dark .worship-check {
+  background-color:#103b31;
+  border-color:rgba(201,166,92,.32);
+  color:#f5ecd9;
+}
+.dark .worship-check:hover {background-color:#1c5141;}
+.dark .worship-checked {
+  background-color:#235b45;
+  border-color:#c9a65c;
+  color:#fff3d5;
+}
+.dark .check-box {
+  border-color:#c0b49c;
+}
+.dark .worship-checked .check-box {
+  background-color:#176f51;
+  border-color:#c9a65c;
+}
+.dark .worship-input {
+  background-color:#103b31;
+  border-color:rgba(201,166,92,.42);
+  color:#f6ebd6;
+}
+.dark .worship-input::placeholder {color:#c1b8a3;}
+.dark .anees-worship-tabs {
+  background-color:#061d19;
+  border:1px solid rgba(201,166,92,.25);
+}
+.dark .anees-worship-tabs button[aria-pressed="true"] {
+  background-color:#245b47;
+  color:#f8edcf;
+}
+.dark .anees-worship-tabs button:not([aria-pressed="true"]) {color:#d2c4aa;}
+.dark .tracker-panel [class~="dark:bg-stone-900"] {background-color:#103b31;}
+.dark .tracker-panel [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.22);}
+.dark .tracker-panel .text-stone-500 {color:#cbbda1;}
+.dark .tracker-panel .text-stone-400 {color:#c3b69b;}
+/* Tasbih dark-mode chips and statistics use emerald instead of navy. */
+.dark [class~="dark:bg-stone-900/60"] {background-color:#103b31;}
+.dark [class~="dark:bg-stone-800/80"] {background-color:#255641;}
+.dark [class~="dark:bg-stone-800"] {background-color:#255641;}
+.dark [class~="dark:border-stone-800"] {border-color:rgba(201,166,92,.25);}

@@ -116,7 +116,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
       </div>
 
       {/* Main Glass / Slate Shell */}
-      <div className="bg-white dark:bg-[#121A2D] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
+      <div className="bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
         {/* Phrase Selection Header */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2">
@@ -177,7 +177,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
         </div>
 
         {/* Selected Phrase Display Banner */}
-        <div className="py-4 px-5 rounded-2xl bg-[#FAF8F5] dark:bg-[#0B1120] border border-stone-200/80 dark:border-stone-800 text-center mb-8">
+        <div className="py-4 px-5 rounded-2xl bg-[#FAF8F5] dark:bg-[#10392F] border border-stone-200/80 dark:border-stone-800 text-center mb-8">
           <p className="font-amiri text-2xl sm:text-3xl text-emerald-900 dark:text-emerald-300 tracking-wide font-bold">
             {activeDisplayPhrase}
           </p>
