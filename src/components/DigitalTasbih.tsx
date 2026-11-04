@@ -153,7 +153,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
       </div>
 
       {/* Main Glass / Slate Shell */}
-      <div className="bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
+      <div className="anees-tasbih-shell bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
         {/* Phrase Selection Header */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2">
