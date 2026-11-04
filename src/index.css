@@ -887,3 +887,26 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-next.anees-mosque-card{background-position:center,left center,center;}
  .anees-tasbih-shell:before,.dark .anees-tasbih-shell:before{background-position:center,center 79%,center;}
 }
+
+
+/* Final approved high-resolution Anees backgrounds. Quran radio remains unchanged. */
+.anees-next.anees-mosque-card{
+ background:
+  linear-gradient(90deg,transparent 0%,rgba(7,46,36,.02) 27%,rgba(7,46,36,.18) 40%,rgba(7,46,36,.65) 56%,#092f26 75%),
+  url("/images/anees-quba-hd.webp") left center / 64% 100% no-repeat,
+  #092f26;
+ background-position:center,left center,center;
+}
+.anees-tasbih-shell:before,
+.dark .anees-tasbih-shell:before{
+ background:
+  linear-gradient(180deg,rgba(6,34,27,.17) 0%,rgba(6,34,27,.14) 44%,rgba(6,34,27,.22) 74%,rgba(6,34,27,.48) 100%),
+  url("/images/anees-tasbih-hd.webp") center center / 100% 100% no-repeat,
+  #103a2d;
+ background-position:center,center,center;
+ opacity:1;
+}
+@media(max-width:767px){
+ .anees-next.anees-mosque-card{background-position:center,left center,center;}
+ .anees-tasbih-shell:before,.dark .anees-tasbih-shell:before{background-position:center,center,center;}
+}
