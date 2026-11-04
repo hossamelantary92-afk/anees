@@ -69,7 +69,6 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
   useEffect(()=>{storage.setItem('anees_tasbih_phrase_totals',JSON.stringify(phraseTotals));},[phraseTotals]);
   useEffect(()=>{storage.setItem('anees_tasbih_hidden_phrases',JSON.stringify(hiddenPhrases));},[hiddenPhrases]);
   useEffect(()=>{storage.setItem('anees_tasbih_target',String(target));},[target]);
-  useEffect(()=>()=>setAutoRunning(false),[]);
   const reorderSaved=(index:number,by:number)=>{
     const next=index+by;
     if(next<0||next>=savedPhrases.length)return;
@@ -166,7 +165,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
       </div>
 
       {/* Main Glass / Slate Shell */}
-      <div className={`${oneHand?'anees-one-hand ':''}bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
+      <div className={`${oneHand ? "anees-one-hand " : ""}bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm`}>
         {/* Phrase Selection Header */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2">
