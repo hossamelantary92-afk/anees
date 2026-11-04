@@ -53,6 +53,7 @@ export function PrayerRadio(){
  const [locating,setLocating]=useState(false);
  const [locationError,setLocationError]=useState('');
  const [prayerPanel,setPrayerPanel]=useState<'qibla'|'details'|null>(null);
+ const [noPrayerOpen,setNoPrayerOpen]=useState(false);
  const [compassHeading,setCompassHeading]=useState<number|null>(null);
  const [compassMessage,setCompassMessage]=useState('');
  const lastAlignmentRef=useRef(false);
@@ -185,6 +186,7 @@ export function PrayerRadio(){
        sunrise:today.timings.Sunrise.slice(0,5),
        maghrib:today.timings.Maghrib.slice(0,5)
      });
+     try{localStorage.setItem('anees_sunset',JSON.stringify({day:localDay,zone:timezone,instant:cityTimeToEpoch(localDay,today.timings.Maghrib.slice(0,5),timezone)}));window.dispatchEvent(new Event('anees-sunset-updated'));}catch{}
      setUpdatingPrayers(false);
    }catch(e){if(!ctl.signal.aborted){setUpdatingPrayers(false);setError('تعذّر تحديث المواقيت. ما زالت آخر مواقيت تم تحميلها ظاهرة.');}}})() ;
    return()=>ctl.abort();
@@ -210,6 +212,16 @@ export function PrayerRadio(){
  const nightEnd=loadedDay&&tomorrowFajr?cityTimeToEpoch(addCalendarDay(loadedDay,1),tomorrowFajr,prayerTimeZone):0;
  const midnight=nightStart&&nightEnd?nightStart+(nightEnd-nightStart)/2:0;
  const lastThird=nightStart&&nightEnd?nightStart+(nightEnd-nightStart)*2/3:0;
+ const prayerTime=(name:string)=>times.find(t=>t.key===name)?.time||'';
+ const fajrInstant=loadedDay&&prayerTime('Fajr')?cityTimeToEpoch(loadedDay,prayerTime('Fajr'),prayerTimeZone):0;
+ const sunriseInstant=loadedDay&&sunrise?cityTimeToEpoch(loadedDay,sunrise,prayerTimeZone):0;
+ const dhuhrInstant=loadedDay&&prayerTime('Dhuhr')?cityTimeToEpoch(loadedDay,prayerTime('Dhuhr'),prayerTimeZone):0;
+ const asrInstant=loadedDay&&prayerTime('Asr')?cityTimeToEpoch(loadedDay,prayerTime('Asr'),prayerTimeZone):0;
+ const prohibitionPeriods=[
+  {title:'بعد الفجر إلى ارتفاع الشمس',detail:'يشمل وقت شروق الشمس، ويستمر إلى ارتفاعها بعد الشروق بنحو 15 دقيقة تقريبًا.',active:!!fajrInstant&&now>=fajrInstant&&now<sunriseInstant+15*60000,icon:'sunrise'},
+  {title:'وقت استواء الشمس قبل الظهر',detail:'وقت قصير قبيل دخول الظهر؛ التقدير التقريبي هنا ليس توقيتًا شرعيًا رسميًا.',active:!!dhuhrInstant&&now>=dhuhrInstant-5*60000&&now<dhuhrInstant,icon:'sun'},
+  {title:'بعد العصر إلى غروب الشمس',detail:'يشمل الفترة التي تسبق الغروب مباشرة.',active:!!asrInstant&&now>=asrInstant&&now<nightStart,icon:'sunset'}
+ ];
  useEffect(()=>{
    if(!prayerPanel)return;
    const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setPrayerPanel(null);};
@@ -250,13 +262,28 @@ export function PrayerRadio(){
     <p className="anees-qibla-help">{compassHeading===null?'السهم يشير للقبلة بافتراض أن أعلى الشاشة شمال؛ اسمح ببوصلة الجهاز لتحريك السهم مع اتجاه الهاتف.':'حرّك الهاتف ببطء؛ ستضيء البوصلة عند محاذاة اتجاه القبلة.'}</p>
     {compassHeading===null&&<button className="anees-qibla-enable" type="button" onClick={askCompass}>تفعيل بوصلة الهاتف</button>}
     {compassMessage&&<p role="status" className="anees-qibla-help">{compassMessage}</p>}
-   </div>:<div className="anees-prayer-detail-list">
-    {names.map(n=><div key={n.key}><span>{n.name}</span><strong dir="ltr">{times.find(t=>t.key===n.key)?.time||'--:--'}</strong></div>)}
-    <div><span><Sunrise size={19}/>الشروق</span><strong dir="ltr">{sunrise||'--:--'}</strong></div>
-    <div><span><Sunset size={19}/>غروب الشمس</span><strong dir="ltr">{maghrib||'--:--'}</strong></div>
-    <div><span><MoonStar size={19}/>منتصف الليل الشرعي</span><strong>{midnight?formatZonedTime(midnight,prayerTimeZone):'—'}</strong></div>
-    <div><span><MoonStar size={19}/>بداية الثلث الأخير</span><strong>{lastThird?formatZonedTime(lastThird,prayerTimeZone):'—'}</strong></div>
-    <p>منتصف الليل والثلث الأخير محسوبان من مغرب اليوم إلى فجر الغد، وفق المواقيت الحسابية للموقع المحدد.</p>
+   </div>:<div className="anees-prayer-details">
+    <div className="anees-details-next"><div><span>الصلاة القادمة</span><strong>{next?.name||'—'}</strong></div><div className="anees-details-clock"><span>{next?.time||'--:--'}</span><b dir="ltr">{next?countdown:'--:--:--'}</b></div></div>
+    <div className="anees-prayer-detail-list">
+      {[
+        {label:'الفجر',time:prayerTime('Fajr'),Icon:Moon},
+        {label:'الشروق',time:sunrise,Icon:Sunrise},
+        {label:'الظهر',time:prayerTime('Dhuhr'),Icon:Clock3},
+        {label:'العصر',time:prayerTime('Asr'),Icon:Clock3},
+        {label:'المغرب',time:prayerTime('Maghrib'),Icon:Sunset},
+        {label:'العشاء',time:prayerTime('Isha'),Icon:MoonStar}
+      ].map(({label,time,Icon})=><div key={label}><span><Icon size={18}/>{label}</span><strong dir="ltr">{time||'--:--'}</strong></div>)}
+      <div><span><Moon size={18}/>منتصف الليل</span><strong>{midnight?formatZonedTime(midnight,prayerTimeZone):'—'}</strong></div>
+      <div><span><MoonStar size={18}/>الثلث الأخير</span><strong>{lastThird?formatZonedTime(lastThird,prayerTimeZone):'—'}</strong></div>
+    </div>
+    <details className="anees-prohibition" open={noPrayerOpen} onToggle={e=>setNoPrayerOpen(e.currentTarget.open)}>
+      <summary><span><Sunset size={19}/>أوقات النهي عن الصلاة</span><span className="anees-prohibition-toggle">{noPrayerOpen?'−':'+'}</span></summary>
+      <div className="anees-prohibition-content">
+        {prohibitionPeriods.map(p=><div key={p.title}><span>{p.icon==='sunrise'?<Sunrise size={18}/>:p.icon==='sunset'?<Sunset size={18}/>:<Clock3 size={18}/>}</span><div><strong>{p.title}</strong><p>{p.detail}</p></div>{p.active&&<em>وقت نهي تقريبي الآن</em>}</div>)}
+        <p>هذه الفترات تتعلق بالنهي عن بعض الصلوات النافلة، وتوجد استثناءات وخلافات فقهية. لا يُستغنى عن التوقيت الشرعي المحلي، خصوصًا لحظة الزوال وارتفاع الشمس.</p>
+      </div>
+    </details>
+    <p className="anees-details-note">المواقيت حسابية، ومنتصف الليل والثلث الأخير محسوبان من مغرب اليوم إلى فجر الغد.</p>
    </div>}
   </section>
  </div>}

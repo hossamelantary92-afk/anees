@@ -1,5 +1,5 @@
 import React,{useState,useEffect,useRef} from 'react';
-import {Check,X,ClipboardList,Download,Upload,ChevronRight,ChevronLeft,Sun,Moon,ArrowUp,ArrowDown,Undo2} from 'lucide-react';
+import {Check,X,ClipboardList,Download,Upload,ChevronRight,ChevronLeft,Sun,Moon,ArrowUp,ArrowDown,Undo2,BookOpen,HeartHandshake,Sunrise,Sunset,Sparkles,Star,Crown,Droplets} from 'lucide-react';
 import {TrackerDialog} from './TrackerDialog';
 import {calendarPreference,formatCalendarDate,calendarMonth,moveCalendarMonth,CalendarKind} from '../utils/calendar';
 import {ReadingBookmark} from './ReadingBookmark';
@@ -11,6 +11,21 @@ import {dateKey,loadWorship,isWorshipData,loadAdhkarHistory,validHistory,validDa
 interface Props {today:string;counts:Record<string,number>;onOpenAdhkar:(category:'morning'|'evening')=>void;}
 export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  const [data,setData]=useState(()=>migrateWorship(loadWorship(),today));
+ const [fridayEvening,setFridayEvening]=useState(false);
+ useEffect(()=>{
+  const update=()=>{
+   const weekday=new Date().getDay();
+   if(weekday!==4){setFridayEvening(false);return;}
+   try{
+    const v=JSON.parse(localStorage.getItem('anees_sunset')||'null');
+    const current=dateKey(new Date());
+    setFridayEvening(v?.day===current&&typeof v.instant==='number'&&Date.now()>=v.instant);
+   }catch{setFridayEvening(false);}
+  };
+  update();const timer=window.setInterval(update,60000);
+  window.addEventListener('anees-sunset-updated',update);
+  return()=>{window.clearInterval(timer);window.removeEventListener('anees-sunset-updated',update);};
+ },[]);
  const [calendar,setCalendar]=useState<CalendarKind>(calendarPreference);
  useEffect(()=>{const handler=()=>setCalendar(calendarPreference());window.addEventListener('anees-calendar-change',handler);return()=>window.removeEventListener('anees-calendar-change',handler);},[]);
  const [view,setView]=useState<'today'|'history'>('today');
@@ -29,6 +44,16 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  const day=view==='today'?today:selected;
  useEffect(()=>{setEditor(null);setDeleteTarget(null);setUndo(null);},[day]);
  const record=data.days[day]||createPlannedDay(data.plan,day);
+ const weekday=new Date(day+'T12:00:00').getDay();
+ const isFridayWindow=weekday===5||(view==='today'&&weekday===4&&fridayEvening);
+ const fridayDate=weekday===4?dateKey(new Date(new Date(day+'T12:00:00').getTime()+86400000)):day;
+ const fridayRecord=data.days[fridayDate]||createPlannedDay(data.plan,fridayDate);
+ const toggleFridayAct=(value:string)=>{
+   const old=fridayRecord.fridayActs||[];
+   const already=old.includes(value)||(value==='salawat'&&!!fridayRecord.fridayDone);
+   const next=already?old.filter(v=>v!==value):[...old,value];
+   commit({...data,days:{...data.days,[fridayDate]:{...fridayRecord,fridayActs:next,...(value==='salawat'?{fridayDone:!already}:{}),recorded:true}}},'تم تحديث سنن الجمعة');
+ };
  const plan=data.plan;const dayPlan=record.snapshot||plan;
  const commit=(next:WorshipData,label='تم حفظ التغيير')=>{setUndo({data,label});setData(next);};
  const patch=(change:Partial<DayRecord>,label='تم التسجيل')=>commit({...data,days:{...data.days,[day]:{...record,...change,recorded:true}}},label);
@@ -67,7 +92,15 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  adhkar:<><h2 className="font-bold mb-3">أذكار اليوم</h2><div className="space-y-2">{(['morning','evening'] as const).map((v,i)=><button key={v} className="worship-check w-full" disabled={day!==today} onClick={()=>onOpenAdhkar(v)}><span className="flex gap-2 items-center">{i?<Moon size={18}/>:<Sun size={18}/>}أذكار {i?'المساء':'الصباح'}</span><span className="text-sm">{summary?`${summary[v].completed} / ${summary[v].total}`:'—'}</span></button>)}</div></>,
  deeds:<><h2 className="font-bold mb-3">أعمال الخير</h2><div className="grid grid-cols-2 gap-2">{goodDeeds.map(v=><React.Fragment key={v}>{check(v,record.deeds.includes(v),()=>toggle('deeds',v))}</React.Fragment>)}</div></>,
  fasting:<><h2 className="font-bold mb-3">الصيام</h2><label className="block text-sm mb-3">نوع الصيام<select aria-label="نوع الصيام" className="worship-input w-full mt-2" value={record.fasting?.kind||'رمضان'} onChange={e=>patch({fasting:{completed:record.fasting?.completed||false,kind:e.target.value}})}>{fastingKinds.map(v=><option key={v}>{v}</option>)}</select></label><div className="space-y-2">{check('أتممت يوم الصيام',!!record.fasting?.completed,()=>patch({fasting:{kind:record.fasting?.kind||'رمضان',completed:!record.fasting?.completed}}),'علّم عليها بعد إتمام اليوم')}</div></>,
- friday:<><h2 className="font-bold mb-3">ورد الجمعة</h2><p className="font-amiri text-xl leading-loose mb-3">اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.</p>{check('تم ورد الصلاة على النبي',!!record.fridayDone,()=>patch({fridayDone:!record.fridayDone}),'وردك الشخصي ليوم الجمعة')}</>,
+ friday:<><h2 className="font-bold mb-3">الجمعة وسننها</h2><p className="text-xs opacity-75 mb-3">تظهر من مغرب الخميس حتى نهاية الجمعة. هذه قائمة متابعة اختيارية وليست حصرًا للسنن.</p><div className="space-y-2">
+ {[
+  ['kahf','قراءة سورة الكهف','يُشرع قراءتها في يوم الجمعة وليلته'],
+  ['ghusl','الاغتسال للجمعة','آكد في حق من يذهب لصلاة الجمعة'],
+  ['early','التبكير للمسجد','والإنصات للخطبة'],
+  ['salawat','الإكثار من الصلاة على النبي ﷺ','اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ'],
+  ['dua','الدعاء وتحري ساعة الإجابة','مع الاختلاف في تحديد ساعة الإجابة']
+ ].map(([id,label,detail])=><React.Fragment key={id}>{check(label,((fridayRecord.fridayActs||[]).includes(id)||(id==='salawat'&&!!fridayRecord.fridayDone)),()=>toggleFridayAct(id),detail)}</React.Fragment>)}
+ </div></>,
  custom:<><h2 className="font-bold mb-3">عاداتي الخاصة</h2><div className="space-y-2">{dayPlan.custom.filter(v=>!plan.hiddenCustom?.includes(v.id)).map(v=><React.Fragment key={v.id}>{check(v.label,record.custom.includes(v.id),()=>toggle('custom',v.id))}</React.Fragment>)}</div></>
  };
  const order=[...plan.order||sectionOrder,...sectionOrder.filter(k=>!(plan.order||sectionOrder).includes(k))];
@@ -88,6 +121,6 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  {pending&&<TrackerDialog label="تأكيد استعادة النسخة" onClose={()=>setPending(null)}><div role="alert" className="tracker-panel"><h2 className="font-bold">استعادة {Object.keys(pending.data.days).length} يومًا</h2><p className="text-sm mt-2">ستستبدل سجل عباداتي والخطة وتقدم الأذكار الحالي ثم يعاد فتح التطبيق.</p><button className="utility-action" onClick={restore}>تأكيد الاستعادة</button><button className="utility-action" onClick={()=>setPending(null)}>إلغاء</button></div></TrackerDialog>}
  {view==='history'&&<><section className="tracker-panel"><div className="flex items-center justify-between"><button aria-label="الشهر السابق" className="utility-action" onClick={()=>shift(-1)}><ChevronRight/></button><h2 className="font-bold">{formatCalendarDate(monthDate,calendar,{month:'long',year:'numeric'})}</h2><button disabled={!canAdvance} aria-label="الشهر التالي" className="utility-action disabled:opacity-25" onClick={()=>shift(1)}><ChevronLeft/></button></div><div className="grid grid-cols-7 gap-1 text-xs text-center mt-3">{['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'].map(v=><span className="py-2" key={v}>{v}</span>)}{Array.from({length:displayedMonth.first.getDay()},(_,i)=><span key={'pad'+i}/>)}{displayedMonth.days.map(({date,label})=>{const k=dateKey(date);const has=dayHasRecord(data.days[k]);return <button key={k} disabled={k>today} aria-label={`${formatCalendarDate(date,calendar)} ${has?'يوجد تسجيل':'بدون تسجيل'}`} aria-pressed={selected===k} onClick={()=>setSelected(k)} className={`min-h-12 rounded-xl disabled:opacity-25 ${selected===k?'bg-emerald-800 text-white':'bg-stone-50 dark:bg-stone-900'}`}>{label}<span className={`block w-1 h-1 mx-auto mt-1 rounded-full ${has?'bg-emerald-500':'bg-stone-300'}`}/></button>})}</div>{calendar==='gregory'?<label className="text-sm block mt-3">اختيار تاريخ<input type="date" max={today} value={selected} className="worship-input w-full mt-2" onChange={e=>{if(validDate(e.target.value)&&e.target.value<=today){setSelected(e.target.value);setMonth(e.target.value.slice(0,7));}}}/></label>:<p className="text-sm mt-3">التاريخ المختار: {formatCalendarDate(selected,calendar)} · اختر يومًا من التقويم الهجري أعلاه.</p>}</section><details className="tracker-panel"><summary className="font-bold cursor-pointer min-h-11 py-2">ملخص آخر 7 أيام حتى هذا التاريخ</summary><div className="text-sm space-y-2 mt-3"><p>{stats.recorded} أيام مسجلة · {7-stats.recorded} بدون تسجيل</p><p>ورد القراءة مكتمل في {stats.reading} أيام</p><p>أعمال الخير مسجلة في {stats.deeds} أيام</p><p>الصيام مكتمل في {stats.fasting} أيام</p><p>الحفظ مسجل في {stats.memoryDays} أيام · المراجعة في {stats.reviewDays} أيام</p><p>{stats.memory.length} مقاطع حفظ مكتملة · {stats.reviews.length} جولات مراجعة</p>{stats.memory.map((p,i)=><p key={i} className="text-xs text-stone-500">حفظ: {titleOf(p)}</p>)}{stats.reviews.map((p,i)=><p key={i} className="text-xs text-stone-500">مراجعة: {titleOf(p)}</p>)}</div></details></>}
  <div><h2 className="font-bold">{formatCalendarDate(day,calendar)}</h2><p className="text-xs text-stone-500 mt-2">{dayHasRecord(data.days[day])?'اضغط على العلامة للتسجيل أو إلغائه':''}</p></div>
- {order.filter(k=>sectionVisible(plan,k)&&(k!=='friday'||new Date(day+'T12:00:00').getDay()===5)).map(k=><section key={k} className="tracker-panel">{blocks[k]}</section>)}
+ {order.filter(k=>sectionVisible(plan,k)&&(k!=='friday'||isFridayWindow)).map(k=><section key={k} className={`tracker-panel anees-worship-section anees-worship-${k}`}><div className="anees-worship-emblem" aria-hidden="true">{k==='prayers'?<Sparkles/>:k==='quran'?<BookOpen/>:k==='memorization'?<Star/>:k==='revision'?<BookOpen/>:k==='adhkar'?<Sunrise/>:k==='deeds'?<HeartHandshake/>:k==='fasting'?<Moon/>:k==='friday'?<Crown/>:<Droplets/>}</div>{blocks[k]}</section>)}
  </div>;
 };

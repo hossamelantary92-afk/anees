@@ -31,7 +31,18 @@ function saved<T,>(key: string, fallback: T): T {
 export const AdhkarSection: React.FC<Props> = props => {
  const [favoriteView,setFavoriteView]=useState<'adhkar'|'reciters'>('adhkar');
  const [selectedCategory, setCategory] = useState('morning');
- useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setCategory(category); setQuery(''); setDisplaySettings(p=>({...p,adhkar:{...p.adhkar,filter:'all'}})); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
+ const [selectedDuaGroup,setSelectedDuaGroup]=useState('');
+ const duaGroups=[
+  {id:'quran',label:'أدعية القرآن الكريم',ids:['d-quran-guidance','d-quran-mercy','d-quran-repentance','d-quran-musa','d-1']},
+  {id:'prophets',label:'أدعية الأنبياء',ids:['d-quran-repentance','d-quran-musa']},
+  {id:'worry',label:'أدعية الهم والكرب',ids:['life-karb','d-quran-guidance']},
+  {id:'healing',label:'أدعية الشفاء',ids:['life-healing']},
+  {id:'comprehensive',label:'الأدعية الجامعة',ids:[]},
+  {id:'daily',label:'أدعية الحياة اليومية',ids:[]}
+ ];
+ const selectDua=(value:string)=>{setSelectedDuaGroup(value);if(value){setCategory(value==='daily'?'dailyLife':'dailyDuas');setQuery('');setSearchOpen(false);setFilter('all');setPositions(p=>({...p,[value==='daily'?'dailyLife:all':'dailyDuas:all']:0}));}};
+
+ useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setCategory(category); setSelectedDuaGroup(''); setQuery(''); setDisplaySettings(p=>({...p,adhkar:{...p.adhkar,filter:'all'}})); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
  const category = props.favoritesOnly ? 'favorites' : selectedCategory;
  const [displaySettings,setDisplaySettings]=useState(()=>{
   const defaults={mode:'focus' as 'list'|'focus',filter:'all' as 'all'|'pending'|'completed',autoNext:false};
@@ -57,7 +68,18 @@ export const AdhkarSection: React.FC<Props> = props => {
  useEffect(() => { storage.setItem('hisn_prayer',JSON.stringify(prayer)); window.dispatchEvent(new Event('hisn-prayer')); },[prayer]);
  useEffect(() => { setQuery(''); setConfirmReset(false); setToolsOpen(false); setSearchOpen(false); }, [props.favoritesOnly]);
  const meta = DHIKR_CATEGORIES.find(c => c.id === category);
- const base = useMemo(() => ALL_ADHKAR.filter(d => query.trim() ? (!props.favoritesOnly || favorites.includes(d.id)) && normalize([d.title,d.text,d.source,d.narrator].join(' ')).includes(normalize(query.trim())) : category === 'favorites' ? favorites.includes(d.id) : d.category === category && (d.id !== 'p-ilm' || prayer === 'الفجر')),[category,query,favorites,prayer,props.favoritesOnly]);
+ const base = useMemo(() => ALL_ADHKAR.filter(d => {
+  if(query.trim())return (!props.favoritesOnly || favorites.includes(d.id)) && normalize([d.title,d.text,d.source,d.narrator].join(' ')).includes(normalize(query.trim()));
+  if(category==='favorites')return favorites.includes(d.id);
+  if(selectedDuaGroup){
+   const group=duaGroups.find(g=>g.id===selectedDuaGroup);
+   if(!group)return false;
+   if(group.id==='daily')return d.category==='dailyLife';
+   if(group.id==='comprehensive')return d.category==='dailyDuas';
+   return group.ids.includes(d.id);
+  }
+  return d.category===category && (d.id!=='p-ilm'||prayer==='الفجر');
+ }),[category,query,favorites,prayer,props.favoritesOnly,selectedDuaGroup]);
  const rows = base.filter(d => filter === 'all' || (filter === 'completed' ? (props.remainingCounts[d.id] ?? d.count) === 0 : (props.remainingCounts[d.id] ?? d.count) > 0));
  const completed = base.filter(d => (props.remainingCounts[d.id] ?? d.count) === 0).length;
  const progress = base.length ? Math.round(completed / base.length * 100) : 0;
@@ -71,12 +93,15 @@ export const AdhkarSection: React.FC<Props> = props => {
    props.onCountDecrement(id);
  };
  const btn = 'px-4 py-2.5 rounded-xl text-sm border border-stone-200 dark:border-stone-700 transition-colors';
- const changeCategory=(value:string)=>{setCategory(value);setQuery('');setSearchOpen(false);setFilter('all');setConfirmReset(false);};
+ const changeCategory=(value:string)=>{setSelectedDuaGroup('');setCategory(value);setQuery('');setSearchOpen(false);setFilter('all');setConfirmReset(false);};
  return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
    {props.favoritesOnly&&<><h1 className="text-2xl font-bold mb-4">المفضلة</h1><div className="grid grid-cols-2 gap-2 mb-5">{(['adhkar','reciters'] as const).map((v,i)=><button key={v} aria-pressed={favoriteView===v} onClick={()=>setFavoriteView(v)} className={`${btn} min-h-12 ${favoriteView===v?'bg-emerald-800 text-white':''}`}>{i?'قرّاء القرآن':'الأذكار المفضلة'}</button>)}</div></>}
    {props.favoritesOnly&&favoriteView==='reciters'&&<FavoriteReciters/>}
    <div hidden={props.favoritesOnly&&favoriteView==='reciters'}>
-     {!props.favoritesOnly&&<div className="adhkar-selector"><h1 className="inline-flex items-center gap-2 font-bold text-base shrink-0"><BookOpen size={22}/><span>الأذكار</span></h1><label className="flex-1 min-w-0"><span className="sr-only">اختيار قسم الأذكار</span><select aria-label="اختيار قسم الأذكار" className="worship-input w-full font-semibold text-sm" value={selectedCategory} onChange={e=>changeCategory(e.target.value)}>{DHIKR_CATEGORIES.map(cat=><option key={cat.id} value={cat.id}>{cat.name}</option>)}</select></label></div>}
+     {!props.favoritesOnly&&<div className="anees-two-selectors" dir="rtl">
+   <label className="anees-category-picker"><span className="anees-picker-title">✦ الأدعية</span><select aria-label="اختيار قسم الأدعية" className="worship-input w-full font-semibold text-sm" value={selectedDuaGroup} onChange={e=>selectDua(e.target.value)}><option value="">اختر قسم الأدعية</option>{duaGroups.map(group=><option key={group.id} value={group.id}>{group.label}</option>)}</select></label>
+   <label className="anees-category-picker"><span className="anees-picker-title"><BookOpen size={18}/> الأذكار</span><select aria-label="اختيار قسم الأذكار" className="worship-input w-full font-semibold text-sm" value={selectedDuaGroup?'':selectedCategory} onChange={e=>changeCategory(e.target.value)}><option value="" disabled>اختر قسم الأذكار</option>{DHIKR_CATEGORIES.filter(cat=>cat.id!=='dailyDuas').map(cat=><option key={cat.id} value={cat.id}>{cat.name}</option>)}</select></label>
+  </div>}
      <div className="mb-4" aria-label="تقدم الورد"><div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400"><span>{query?'نتائج البحث: ':''}المكتمل {completed} من {base.length}</span><div className="flex items-center gap-2"><span className="text-emerald-700 dark:text-emerald-300 font-semibold">{progress}%</span>{!query&&category!=='favorites'&&<button onClick={()=>setConfirmReset(true)} aria-label="إعادة الورد" className="utility-action"><RotateCcw size={17}/></button>}</div></div><div role="progressbar" aria-label="تقدم الورد" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 transition-all" style={{width:`${progress}%`}}/></div></div>
      {!query&&category==='afterPrayer'&&<div className="flex items-center gap-3 mb-4 text-sm"><label htmlFor="prayer">ورد الصلاة</label><select id="prayer" value={prayer} onChange={e=>setPrayer(e.target.value)} className="worship-input flex-1 min-w-0">{['الفجر','الظهر','العصر','المغرب','العشاء'].map(v=><option key={v}>{v}</option>)}</select><span className="text-xs text-stone-500">تقدم مستقل</span></div>}
      <div className="flex items-center justify-between gap-2 mb-4" aria-label="أدوات القراءة"><button aria-expanded={searchOpen} aria-controls="adhkar-search" onClick={()=>{setSearchOpen(!searchOpen);if(searchOpen)setQuery('');}} aria-label={searchOpen?'إغلاق البحث':'البحث في الأذكار'} className={`utility-action border border-stone-200 dark:border-stone-700 ${searchOpen?'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200':''}`}>{searchOpen?<X size={20}/>:<Search size={20}/>}</button><div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-900"><button aria-pressed={mode==='focus'} onClick={()=>setMode('focus')} className={`utility-action text-sm ${mode==='focus'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><BookOpen size={18}/>قراءة</button><button aria-pressed={mode==='list'} onClick={()=>setMode('list')} className={`utility-action text-sm ${mode==='list'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><List size={18}/>قائمة</button></div><button aria-expanded={toolsOpen} onClick={()=>setToolsOpen(true)} aria-label="أدوات العرض" className="utility-action border border-stone-200 dark:border-stone-700 relative"><SlidersHorizontal size={20}/>{filter!=='all'&&<span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-600"/>}</button></div>
