@@ -145,13 +145,14 @@ export const DhikrCard: React.FC<DhikrCardProps> = ({
 
       {/* Interactive Bottom Control Strip */}
       <div className="mt-5 pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between gap-4">
-        <button onClick={() => onUndo(dhikr.id)} disabled={remainingCount >= totalCount} aria-label="تراجع عن ضغطة" className="utility-action disabled:opacity-25 text-stone-500"><Undo2 className="w-5 h-5" /></button>
+        <button type="button" onClick={() => onUndo(dhikr.id)} disabled={remainingCount >= totalCount} aria-label="تراجع عن ضغطة" className="anees-counter-action utility-action disabled:opacity-40 text-emerald-800 dark:text-[#edd6a0]"><Undo2 className="w-4 h-4" /><span>تراجع</span></button>
         {/* Reset Counter */}
         <button
+          type="button"
           onClick={() => onReset(dhikr.id)}
           title="إعادة ضبط العداد"
           aria-label="إعادة ضبط العداد"
-          className="text-xs text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          className="anees-counter-action text-xs text-emerald-800 dark:text-[#edd6a0] inline-flex items-center gap-1.5 py-2 px-2.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>إعادة</span>
