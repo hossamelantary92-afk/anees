@@ -1,6 +1,6 @@
 import { storage } from '../utils/storage';
-import React, { useState, useEffect, useRef } from 'react';
-import { RotateCcw, Volume2, VolumeX, Sparkles, Check, Play, Pause, ArrowUp, ArrowDown, EyeOff, Eye, Hand } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RotateCcw, Volume2, VolumeX, Sparkles, Check, ChevronDown, ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
 import { playBeadClick, playCompletionChime, triggerHaptic } from '../utils/audio';
 
 const PRESET_PHRASES = [
@@ -39,49 +39,54 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
   const [selectedPhrase, setSelectedPhrase] = useState<string>(PRESET_PHRASES[0]);
   const [customPhrase, setCustomPhrase] = useState<string>('');
   const [savedPhrases, setSavedPhrases] = useState<string[]>(() => {try {const v=JSON.parse(storage.getItem('anees_saved_tasbih')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,30):[];}catch{return [];}});
-  const [phraseTotals,setPhraseTotals]=useState<Record<string,number>>(()=>{
-    try {const v=JSON.parse(storage.getItem('anees_tasbih_phrase_totals')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).filter((entry):entry is [string,number]=>{const [key,n]=entry;return key.length<200&&typeof n==='number'&&Number.isSafeInteger(n)&&n>=0;})):{};}catch{return {};}
+  const [phraseMenuOpen,setPhraseMenuOpen]=useState(false);
+  const [deletedPresetPhrases,setDeletedPresetPhrases]=useState<string[]>(()=>{
+    try {const parsed=JSON.parse(storage.getItem('anees_tasbih_hidden_phrases')||'[]');return Array.isArray(parsed)?parsed.filter((p:unknown)=>typeof p==='string'):[];}catch{return [];}
   });
-  const [hiddenPhrases,setHiddenPhrases]=useState<string[]>(()=>{
-    try {const v=JSON.parse(storage.getItem('anees_tasbih_hidden_phrases')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,50):[];}catch{return [];}
+  const [phraseOrder,setPhraseOrder]=useState<string[]>(()=>{
+    try {const parsed=JSON.parse(storage.getItem('anees_tasbih_phrase_order')||'[]');return Array.isArray(parsed)?parsed.filter((p:unknown)=>typeof p==='string'):[];}catch{return [];}
   });
-  const [managePhrases,setManagePhrases]=useState(false);
-  const [oneHand,setOneHand]=useState(false);
-  const [autoRunning,setAutoRunning]=useState(false);
-  const [autoInterval,setAutoInterval]=useState(3);
-  const [customTarget,setCustomTarget]=useState('');
-  const [customInterval,setCustomInterval]=useState('');
-  const tickRef=useRef<()=>void>(()=>{});
+  const allPhrases=[...savedPhrases,...PRESET_PHRASES].filter((phrase,index,array)=>array.indexOf(phrase)===index&&!deletedPresetPhrases.includes(phrase));
+  const orderedPhrases=[...allPhrases].sort((a,b)=>{
+    const ai=phraseOrder.indexOf(a),bi=phraseOrder.indexOf(b);
+    return (ai<0?1000+allPhrases.indexOf(a):ai)-(bi<0?1000+allPhrases.indexOf(b):bi);
+  });
+  const updateOrder=(next:string[])=>{setPhraseOrder(next);storage.setItem('anees_tasbih_phrase_order',JSON.stringify(next));};
+  const movePhrase=(phrase:string,step:number)=>{
+    const index=orderedPhrases.indexOf(phrase),next=index+step;
+    if(next<0||next>=orderedPhrases.length)return;
+    const reordered=[...orderedPhrases];
+    [reordered[index],reordered[next]]=[reordered[next],reordered[index]];
+    updateOrder(reordered);
+  };
+  const deletePhrase=(phrase:string)=>{
+    if(!window.confirm('إزالة هذا الذكر من قائمة السبحة؟'))return;
+    if(savedPhrases.includes(phrase)){
+      const remaining=savedPhrases.filter(item=>item!==phrase);
+      setSavedPhrases(remaining);
+      storage.setItem('anees_saved_tasbih',JSON.stringify(remaining));
+    }
+    if(PRESET_PHRASES.includes(phrase)){
+      const next=[...deletedPresetPhrases.filter(item=>item!==phrase),phrase];
+      setDeletedPresetPhrases(next);
+      storage.setItem('anees_tasbih_hidden_phrases',JSON.stringify(next));
+    }
+    const remaining=orderedPhrases.filter(item=>item!==phrase);
+    updateOrder(remaining);
+    if(selectedPhrase===phrase){setSelectedPhrase(remaining[0]||PRESET_PHRASES[0]);setIsCustomMode(remaining.length===0);}
+    setSaveMessage('تمت إزالة الذكر من القائمة');
+  };
   const [saveMessage,setSaveMessage]=useState('');
   useEffect(()=>{if(!saveMessage)return;const id=window.setTimeout(()=>setSaveMessage(''),3000);return()=>window.clearTimeout(id);},[saveMessage]);
-  const savePhrase=()=>{const phrase=customPhrase.trim();if(!phrase)return;const updated=[phrase,...savedPhrases.filter(v=>v!==phrase)].slice(0,30);setSavedPhrases(updated);storage.setItem('anees_saved_tasbih',JSON.stringify(updated));setSelectedPhrase(phrase);setIsCustomMode(false);setSaveMessage('تم حفظ الذكر');};
+  const savePhrase=()=>{const phrase=customPhrase.trim();if(!phrase)return;const updated=[phrase,...savedPhrases.filter(v=>v!==phrase)].slice(0,30);setSavedPhrases(updated);storage.setItem('anees_saved_tasbih',JSON.stringify(updated));setDeletedPresetPhrases(prev=>{const next=prev.filter(p=>p!==phrase);storage.setItem('anees_tasbih_hidden_phrases',JSON.stringify(next));return next;});updateOrder([phrase,...orderedPhrases.filter(p=>p!==phrase)]);setSelectedPhrase(phrase);setIsCustomMode(false);setPhraseMenuOpen(false);setSaveMessage('تم حفظ الذكر');};
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
-  const [target, setTarget] = useState<number>(()=>{
-    const n=Number(storage.getItem('anees_tasbih_target')||'33');
-    return Number.isSafeInteger(n)&&n>=0&&n<=100000? n:33;
-  });
+  const [target, setTarget] = useState<number>(33);
   const [totalLifetime, setTotalLifetime] = useState<number>(() => {
     const saved = storage.getItem('tasbih_lifetime');
     return saved ? parseInt(saved, 10) : 0;
   });
 
   const [isPressing, setIsPressing] = useState<boolean>(false);
-  useEffect(()=>{storage.setItem('anees_tasbih_phrase_totals',JSON.stringify(phraseTotals));},[phraseTotals]);
-  useEffect(()=>{storage.setItem('anees_tasbih_hidden_phrases',JSON.stringify(hiddenPhrases));},[hiddenPhrases]);
-  useEffect(()=>{storage.setItem('anees_tasbih_target',String(target));},[target]);
-  const reorderSaved=(index:number,by:number)=>{
-    const next=index+by;
-    if(next<0||next>=savedPhrases.length)return;
-    const updated=[...savedPhrases];
-    [updated[index],updated[next]]=[updated[next],updated[index]];
-    setSavedPhrases(updated);
-    storage.setItem('anees_saved_tasbih',JSON.stringify(updated));
-  };
-  const changePhrase=(phrase:string)=>{
-    setAutoRunning(false);
-    setSelectedPhrase(phrase);
-    setIsCustomMode(false);
-  };
   const [justCompletedLap, setJustCompletedLap] = useState<boolean>(false);
 
   useEffect(() => {
@@ -97,8 +102,6 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
   }, [totalLifetime]);
 
   const handleTap = () => {
-    const phrase=activeDisplayPhrase.trim();
-    if(phrase)setPhraseTotals(previous=>({...previous,[phrase]:(previous[phrase]||0)+1}));
     const newCount = count + 1;
     const newTotal = totalLifetime + 1;
     setTotalLifetime(newTotal);
@@ -106,7 +109,6 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
     if (target > 0 && newCount >= target) {
       // Completed target round
       setCount(0);
-      setAutoRunning(false);
       setLaps((prev) => prev + 1);
       setJustCompletedLap(true);
       setTimeout(() => setJustCompletedLap(false), 1200);
@@ -120,26 +122,12 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
     }
   };
 
-  tickRef.current=handleTap;
-  useEffect(()=>{
-    if(!autoRunning)return;
-    const id=window.setInterval(()=>tickRef.current(),autoInterval*1000);
-    return()=>window.clearInterval(id);
-  },[autoRunning,autoInterval]);
-  useEffect(()=>{
-    const pause=()=>{if(document.visibilityState!=='visible')setAutoRunning(false);};
-    document.addEventListener('visibilitychange',pause);
-    window.addEventListener('pagehide',pause);
-    return()=>{document.removeEventListener('visibilitychange',pause);window.removeEventListener('pagehide',pause);};
-  },[]);
   const handleResetCurrent = () => {
-    setAutoRunning(false);
     setCount(0);
   };
 
   const handleResetAll = () => {
     if (window.confirm('هل تريد تصفير عداد السبحة والدورات الحالية؟')) {
-      setAutoRunning(false);
       setCount(0);
       setLaps(0);
     }
@@ -165,66 +153,29 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
       </div>
 
       {/* Main Glass / Slate Shell */}
-      <div className={`${oneHand ? "anees-one-hand " : ""}bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm`}>
+      <div className="bg-white dark:bg-[#174638] border border-stone-200/90 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm">
         {/* Phrase Selection Header */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2">
             اختر صيغة الذكر والتسبيح:
           </label>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_PHRASES.slice(0, 5).filter(phrase=>!hiddenPhrases.includes(phrase)).map((phrase) => (
-              <button
-                key={phrase}
-                onClick={() => {
-                  changePhrase(phrase);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium font-tajawal transition-colors ${
-                  !isCustomMode && selectedPhrase === phrase
-                    ? 'bg-emerald-800 text-white shadow-xs'
-                    : 'bg-stone-100 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
-                }`}
-              >
-                {phrase}
-              </button>
-            ))}
+          {saveMessage && <span role="status" className="block text-xs text-emerald-700 dark:text-amber-200 mt-2">{saveMessage}</span>}
+          {/* All selection, reordering, and removing happen inside the dropdown. */}
+          <div className="anees-tasbih-dropdown mt-3">
+            <button type="button" className="anees-tasbih-dropdown-trigger" aria-expanded={phraseMenuOpen} aria-controls="anees-phrase-list" onClick={()=>setPhraseMenuOpen(value=>!value)}>
+              <span className="min-w-0 flex-1 truncate text-right">{isCustomMode?'ذكر مخصص…':selectedPhrase}</span>
+              <ChevronDown size={19} className={phraseMenuOpen?'rotate-180 transition-transform':'transition-transform'}/>
+            </button>
+            {phraseMenuOpen&&<div id="anees-phrase-list" className="anees-tasbih-dropdown-list" aria-label="قائمة أذكار السبحة">
+              {orderedPhrases.map((phrase,index)=><div key={phrase} className="anees-tasbih-dropdown-row">
+                <button type="button" className="anees-tasbih-phrase-choice" aria-current={!isCustomMode&&selectedPhrase===phrase?'true':undefined} onClick={()=>{setSelectedPhrase(phrase);setIsCustomMode(false);setPhraseMenuOpen(false);}}>{phrase}</button>
+                <button type="button" className="anees-tasbih-inline-icon" aria-label={`تحريك ${phrase} لأعلى`} title="تحريك لأعلى" disabled={index===0} onClick={()=>movePhrase(phrase,-1)}><ArrowUp size={17}/></button>
+                <button type="button" className="anees-tasbih-inline-icon" aria-label={`تحريك ${phrase} لأسفل`} title="تحريك لأسفل" disabled={index===orderedPhrases.length-1} onClick={()=>movePhrase(phrase,1)}><ArrowDown size={17}/></button>
+                <button type="button" className="anees-tasbih-inline-icon anees-tasbih-delete" aria-label={`حذف ${phrase}`} title="إزالة من القائمة" onClick={()=>deletePhrase(phrase)}><Trash2 size={17}/></button>
+              </div>)}
+              <button type="button" className="anees-tasbih-add-phrase" onClick={()=>{setIsCustomMode(true);setPhraseMenuOpen(false);}}><Plus size={18}/> إضافة ذكر مخصص</button>
+            </div>}
           </div>
-
-          {saveMessage && <span role="status" className="text-xs text-emerald-700">{saveMessage}</span>}
-          {/* More Phrases Dropdown or Custom */}
-          <div className="mt-3 flex items-center gap-2">
-            <select
-              value={isCustomMode ? 'custom' : selectedPhrase}
-              onChange={(e) => {
-                if (e.target.value === 'custom') {
-                  setAutoRunning(false);
-                  setIsCustomMode(true);
-                } else {
-                  changePhrase(e.target.value);
-                }
-              }}
-              className="anees-tasbih-select w-full text-sm font-tajawal focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a65c]"
-            >
-              <option value="custom">✍️ إدخال ذكر أو دعاء مخصص...</option>
-              {[...savedPhrases,...PRESET_PHRASES].filter((v,i,a)=>a.indexOf(v)===i&&!hiddenPhrases.includes(v)).concat(hiddenPhrases.includes(selectedPhrase)?[selectedPhrase]:[]).map((phrase) => (
-                <option key={phrase} value={phrase}>
-                  {phrase}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button type="button" onClick={()=>setManagePhrases(v=>!v)} className="anees-tasbih-manage-toggle" aria-expanded={managePhrases}>{managePhrases?'إغلاق تنظيم الأذكار':'تنظيم الأذكار وترتيبها'}</button>
-          {managePhrases&&<div className="anees-tasbih-manage" aria-label="ترتيب الأذكار المحفوظة">
-            <p className="text-xs mb-3">رتّب الأذكار التي حفظتها، أو أخفِ أي ذكر من الاختيارات دون حذف عدّاده.</p>
-            {savedPhrases.length>0&&<div className="space-y-2">{savedPhrases.map((phrase,i)=><div className="anees-tasbih-phrase-row" key={phrase}>
-              <span className="flex-1 min-w-0 text-sm">{phrase}</span>
-              <small className="tabular-nums">{phraseTotals[phrase]||0}</small>
-              <button type="button" aria-label={`تقديم ${phrase}`} disabled={i===0} onClick={()=>reorderSaved(i,-1)}><ArrowUp size={17}/></button>
-              <button type="button" aria-label={`تأخير ${phrase}`} disabled={i===savedPhrases.length-1} onClick={()=>reorderSaved(i,1)}><ArrowDown size={17}/></button>
-              <button type="button" aria-label={hiddenPhrases.includes(phrase)?`إظهار ${phrase}`:`إخفاء ${phrase}`} onClick={()=>setHiddenPhrases(prev=>prev.includes(phrase)?prev.filter(v=>v!==phrase):[...prev,phrase])}>{hiddenPhrases.includes(phrase)?<Eye size={17}/>:<EyeOff size={17}/>}</button>
-            </div>)}</div>}
-            <div className="flex flex-wrap gap-2 mt-3">{PRESET_PHRASES.map(phrase=><button type="button" key={phrase} aria-pressed={!hiddenPhrases.includes(phrase)} onClick={()=>setHiddenPhrases(prev=>prev.includes(phrase)?prev.filter(v=>v!==phrase):[...prev,phrase])} className="anees-tasbih-visibility">{hiddenPhrases.includes(phrase)?'إظهار':'إخفاء'} · {phrase}</button>)}</div>
-          </div>}
           {isCustomMode && (
             <div className="anees-custom-entry"><input
               type="text"
@@ -273,7 +224,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
 
             {/* Central Giant Touch Bead */}
             <button
-              onClick={()=>{if(!autoRunning)handleTap();}}
+              onClick={handleTap}
               onMouseDown={() => setIsPressing(true)}
               onMouseUp={() => setIsPressing(false)}
               onTouchStart={() => setIsPressing(true)}
@@ -301,7 +252,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
               </span>
 
               <span className="text-[11px] text-emerald-300/80 mt-2 font-tajawal">
-                {autoRunning?'العداد يعمل تلقائيًا':'اضغط هنا للذكر'}
+                اضغط هنا للذكر
               </span>
             </button>
           </div>
@@ -316,8 +267,8 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
               <button
                 key={t}
                 onClick={() => {
-                  setAutoRunning(false);
                   setTarget(t);
+                  setCount(0);
                 }}
                 className={`px-2.5 py-1 rounded-md font-mono tabular-nums font-semibold transition-colors ${
                   target === t
@@ -330,30 +281,6 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
             ))}
           </div>
 
-          {/* Opt-in auto counting remains foreground-only on iPhone PWA. */}
-          <div className="anees-tasbih-pro w-full">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <strong className="text-sm">Tasbih Pro · العد التلقائي</strong>
-              <button type="button" className="anees-tasbih-action" aria-pressed={oneHand} onClick={()=>setOneHand(v=>!v)}><Hand size={17}/>{oneHand?'إنهاء وضع اليد الواحدة':'وضع اليد الواحدة'}</button>
-            </div>
-            <p className="text-xs mt-2 opacity-80">يعمل أثناء فتح التطبيق فقط، ويتوقف تلقائيًا عند مغادرته أو اكتمال الهدف.</p>
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <span className="text-xs">كل</span>
-              {[1,2,3,5].map(seconds=><button type="button" className="anees-tasbih-chip" aria-pressed={autoInterval===seconds} key={seconds} onClick={()=>{setAutoRunning(false);setAutoInterval(seconds);}}>{seconds} ث</button>)}
-              <input className="anees-tasbih-number" type="number" min={1} max={60} inputMode="numeric" placeholder="ثوانٍ" aria-label="فاصل مخصص بالثواني" value={customInterval} onChange={e=>setCustomInterval(e.target.value)} />
-              <button type="button" className="anees-tasbih-chip" onClick={()=>{const n=Number(customInterval);if(Number.isInteger(n)&&n>=1&&n<=60){setAutoInterval(n);setAutoRunning(false);}else setSaveMessage('اختر مدة من 1 إلى 60 ثانية');}}>تعيين</button>
-            </div>
-            <div className="flex items-center gap-2 mt-3">
-              <button type="button" className="anees-tasbih-auto-start" onClick={()=>setAutoRunning(v=>!v)}>{autoRunning?<><Pause size={18}/>إيقاف مؤقت</>:<><Play size={18}/>ابدأ العد</>}</button>
-              {autoRunning&&<span role="status" className="text-xs">العد جارٍ كل {autoInterval} ثوانٍ</span>}
-            </div>
-            <div className="flex flex-wrap gap-2 items-center mt-3">
-              <label className="text-xs" htmlFor="anees-custom-target">هدف مخصص:</label>
-              <input id="anees-custom-target" className="anees-tasbih-number" type="number" min={1} max={100000} inputMode="numeric" placeholder="مثلاً 500" value={customTarget} onChange={e=>setCustomTarget(e.target.value)} />
-              <button type="button" className="anees-tasbih-chip" onClick={()=>{const n=Number(customTarget);if(Number.isSafeInteger(n)&&n>0&&n<=100000){setTarget(n);setAutoRunning(false);}else setSaveMessage('الهدف يجب أن يكون من 1 إلى 100000');}}>اعتماد الهدف</button>
-            </div>
-            <p className="text-xs mt-3">عدد هذا الذكر منذ تفعيل الميزة: <strong className="tabular-nums">{phraseTotals[activeDisplayPhrase.trim()]||0}</strong></p>
-          </div>
           {/* Sound & Controls */}
           <div className="flex items-center gap-2">
             <button
