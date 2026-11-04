@@ -562,3 +562,75 @@ select option:disabled { color:#78716c; }
 .anees-prayer-detail-list>p{margin-top:12px;font-size:12px;color:#d2c6aa;line-height:1.7}
 @media(min-width:768px){.anees-prayer-modal-backdrop{align-items:center}}
 @media(max-width:480px){.anees-prayer-modal{padding:16px}.anees-prayer-tools button{flex:1;padding:9px 7px;font-size:13px}.anees-mosque-illustration{width:45%;opacity:.17}}
+
+/* Anees mobile polish: tighter spacing, legible icons and an atmospheric mosque card. */
+.anees-next.anees-mosque-card{
+ background:
+  radial-gradient(ellipse at 28% 86%,rgba(228,188,113,.22),transparent 52%),
+  linear-gradient(115deg,#225d4b 0%,#164938 47%,#0b352b 100%);
+}
+.anees-mosque-illustration{left:-3%;bottom:-3px;width:59%;max-width:330px;color:initial;opacity:.32;filter:drop-shadow(0 6px 9px rgba(0,0,0,.2));}
+.anees-next-text{position:relative;z-index:2;}
+.anees-next:before,.anees-next:after{opacity:.55;}
+.anees-prayer-icon{display:grid;place-items:center;height:34px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15));}
+.anees-prayer-tools button{white-space:nowrap;letter-spacing:0;line-height:1.35;}
+.anees-prayer-tools button svg{flex-shrink:0;}
+/* Qibla: replace hairline needle with solid two-sided compass pointer. */
+.anees-qibla-compass{
+ overflow:hidden;isolation:isolate;
+ border:5px solid #b99c61;
+ background:
+   repeating-conic-gradient(from 0deg,rgba(227,193,119,.42) 0deg 1deg,transparent 1deg 15deg) center/92% 92% no-repeat,
+   radial-gradient(circle at 40% 30%,#2c6553 0%,#174637 49%,#0a3027 100%);
+ box-shadow:inset 0 0 0 4px #183a31,inset 0 0 0 11px rgba(201,166,92,.13),0 0 0 2px #8a7549,0 14px 30px rgba(0,0,0,.22);
+ transition:box-shadow .3s ease,border-color .3s ease;
+}
+.anees-qibla-compass:before{inset:18px;border:1px solid rgba(226,192,116,.36);}
+.anees-qibla-north,.anees-qibla-east,.anees-qibla-south,.anees-qibla-west{
+ position:absolute;color:#f6dfa7;font-size:14px;font-weight:800;z-index:2;
+}
+.anees-qibla-north{top:8px;left:50%;transform:translateX(-50%);}
+.anees-qibla-east{top:50%;right:8px;transform:translateY(-50%);}
+.anees-qibla-south{bottom:7px;left:50%;transform:translateX(-50%);}
+.anees-qibla-west{top:50%;left:8px;transform:translateY(-50%);}
+.anees-qibla-needle{position:absolute;top:50%;left:50%;width:52px;height:76%;z-index:2;filter:drop-shadow(0 6px 6px rgba(0,0,0,.24));transition:transform .18s ease-out;}
+.anees-qibla-needle svg{height:100%;width:100%;display:block;}
+.anees-qibla-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;color:#ecd092;background:#173d31;border:2px solid #d8b46b;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;font-size:15px;line-height:1;}
+.anees-qibla-compass.anees-qibla-aligned{
+ border-color:#f5d68e;
+ box-shadow:inset 0 0 0 4px #183a31,inset 0 0 0 11px rgba(248,217,131,.25),0 0 0 3px #f3d184,0 0 34px 8px rgba(241,204,107,.45);
+}
+.anees-qibla-success{background:rgba(230,197,122,.17);color:#ffe6a3;border:1px solid #d5b46d;border-radius:18px;font-size:14px;font-weight:800;padding:8px 17px;}
+.anees-prayer-modal-backdrop{z-index:3000;background:rgba(0,16,13,.79);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
+.anees-prayer-modal{box-shadow:0 24px 65px rgba(0,0,0,.45);border-color:rgba(201,166,92,.72);}
+@media(max-width:767px){
+  .anees-dashboard{padding:8px 12px 16px;}
+  .anees-welcome{padding:6px 2px 14px;gap:10px;}
+  .anees-welcome h1{font-size:clamp(32px,7vw,46px);}
+  .anees-welcome p{font-size:15px;}
+  .anees-next{min-height:155px;padding:17px 19px;border-width:2px;border-radius:24px;}
+  .anees-next h2{font-size:clamp(32px,8vw,48px);}
+  .anees-next-text>span{font-size:16px;}
+  .anees-next:after{bottom:-60px;}
+  .anees-mosque-illustration{left:-6%;bottom:0;width:54%;opacity:.27;}
+  .anees-countdown{font-size:clamp(21px,5.8vw,27px);padding:7px 12px;gap:7px;}
+  .anees-times{padding:15px 0 17px;}
+  .anees-section-heading{margin-bottom:12px;gap:7px;}
+  .anees-section-heading h2{font-size:clamp(17px,4.8vw,21px);}
+  .anees-prayer-grid{gap:5px;}
+  .anees-prayer{gap:5px;padding:10px 1px 12px;min-height:99px;}
+  .anees-prayer-icon{font-size:23px;height:27px;}
+  .anees-prayer strong{font-size:clamp(11px,3vw,14px);}
+  .anees-prayer>span:last-child{font-size:clamp(11px,3vw,13px);}
+  .anees-prayer-tools{gap:8px;margin-top:11px;}
+  .anees-prayer-tools button{min-height:44px;padding:8px 6px;border-radius:13px;font-size:clamp(12px,3.3vw,14px);gap:7px;}
+  .anees-prayer-tools button svg{width:17px;height:17px;}
+  .anees-times small{line-height:1.5;margin-top:8px;font-size:11px;}
+  .anees-radio{padding:15px 17px;border-radius:22px;}
+  .anees-radio-heading h2{font-size:clamp(16px,4.5vw,20px);}
+  .anees-radio-controls{margin-top:11px;}
+  .anees-play{height:52px;width:52px;}
+  .anees-prayer-modal-backdrop{align-items:center;padding:12px;padding-top:max(15px,env(safe-area-inset-top));padding-bottom:max(15px,env(safe-area-inset-bottom));}
+  .anees-prayer-modal{max-height:calc(100dvh - 72px);border-radius:24px;}
+}
+@media(prefers-reduced-motion:reduce){.anees-qibla-needle,.anees-qibla-compass{transition:none;}}
