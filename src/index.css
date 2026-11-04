@@ -747,3 +747,39 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
 .anees-worship-emblem svg{width:29px;height:29px;}
 .dark .anees-tasbih-shell:before{background:linear-gradient(180deg,rgba(8,42,33,.67),rgba(8,42,33,.72) 52%,rgba(8,42,33,.92) 100%),url("https://freerangestock.com/sample/36682/mosque.jpg") center 28% / cover no-repeat;}
 @media(max-width:390px){.anees-dhikr-card .anees-counter-action{min-width:64px;padding:7px;}.anees-dhikr-card .mt-5.pt-3{gap:5px;}}
+
+/* Prayer & Cairo radio imagery: visually balanced, realistic scenes matching approved direction. */
+.anees-next.anees-mosque-card{
+  background:
+    linear-gradient(270deg,#092e25 0%,rgba(9,46,37,.94) 33%,rgba(9,46,37,.55) 61%,rgba(9,46,37,.06) 100%),
+    linear-gradient(0deg,rgba(11,48,37,.18),rgba(11,48,37,.12)),
+    url("https://images.unsplash.com/photo-1758789886567-d8e45b74c03a?auto=format&fit=crop&w=1000&q=72") 22% 50% / cover no-repeat,
+    #123f32;
+  background-position:center,center,24% 54%,center;
+  box-shadow:inset 0 0 36px rgba(8,37,29,.2);
+}
+.anees-next-text{position:relative;z-index:1;}
+.anees-radio{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:
+    linear-gradient(270deg,rgba(7,46,35,.97) 0%,rgba(7,46,35,.88) 43%,rgba(7,46,35,.23) 100%),
+    linear-gradient(0deg,rgba(8,45,35,.65),transparent 65%),
+    url("https://lwmusalla.org/morning-halqah.jpg") 25% 54% / cover no-repeat,
+    #113f30;
+  border-color:#c9a65c;
+}
+.anees-radio-heading,.anees-radio-controls,.anees-radio .anees-error{position:relative;z-index:1;}
+/* Messages must not insert/remove height above the reader, which created visible jump on reset. */
+.anees-action-notice{
+ position:fixed;z-index:60;
+ top:calc(var(--hisn-header-height,74px) + 10px);
+ left:50%;transform:translateX(-50%);
+ width:max-content;max-width:calc(100vw - 36px);
+ padding:11px 17px;box-shadow:0 8px 25px rgba(0,0,0,.23);
+ background:#174638!important;color:#f5e6c1!important;border-color:#d4b372!important;
+ pointer-events:none;
+}
+@media(max-width:767px){
+ .anees-next.anees-mosque-card{background-position:center,center,22% 48%,center;}
+ .anees-radio{background-position:center,center,22% 52%,center;}
+}
