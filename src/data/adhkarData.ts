@@ -1,6 +1,6 @@
 export interface DhikrItem {
   id: string;
-  category: 'morning' | 'evening' | 'sleep' | 'wakeUp' | 'afterPrayer' | 'dailyDuas' | 'dailyLife';
+  category: 'morning' | 'evening' | 'sleep' | 'wakeUp' | 'afterPrayer' | 'dailyDuas' | 'dailyLife' | 'general';
   title: string;
   text: string;
   count: number;
@@ -14,7 +14,7 @@ export interface DhikrItem {
 }
 
 export interface DhikrCategoryMeta {
-  id: 'morning' | 'evening' | 'sleep' | 'wakeUp' | 'afterPrayer' | 'dailyDuas' | 'dailyLife';
+  id: 'morning' | 'evening' | 'sleep' | 'wakeUp' | 'afterPrayer' | 'dailyDuas' | 'dailyLife' | 'general';
   name: string;
   description: string;
   recommendedTime: string;
@@ -71,6 +71,7 @@ export const DHIKR_CATEGORIES: DhikrCategoryMeta[] = [
     primaryBook: 'الصحيحان والأذكار للنووي',
     iconName: 'HeartHandshake'
   }
+, {id:"general", name:"تسابيح واستغفار",description:"أذكار مطلقة من التسبيح والاستغفار",recommendedTime:"في أي وقت",primaryBook:"الصحيحان والسنة",iconName:"Sparkles"}
 , { id: "dailyLife", name: "أذكار الحياة اليومية", description: "أذكار البيت والطهارة والطعام والمسجد", recommendedTime: "بحسب المناسبة", primaryBook: "حصن المسلم والسنن", iconName: "HeartHandshake" }
 ];
 
@@ -379,7 +380,7 @@ export const ALL_ADHKAR: DhikrItem[] = [
   },
   {
     "id": "d-4",
-    "category": "dailyDuas",
+    "category": "general",
     "title": "كلمتان خفيفتان على اللسان ثقيلتان في الميزان",
     "text": "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ.",
     "count": 1,
@@ -1007,7 +1008,7 @@ export const ALL_ADHKAR: DhikrItem[] = [
   },
   {
     "id": "d-hawqala",
-    "category": "dailyDuas",
+    "category": "general",
     "title": "لا حول ولا قوة إلا بالله",
     "text": "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ.",
     "count": 1,
@@ -1020,7 +1021,7 @@ export const ALL_ADHKAR: DhikrItem[] = [
   },
   {
     "id": "d-tawba",
-    "category": "dailyDuas",
+    "category": "general",
     "title": "الاستغفار والتوبة اليومية",
     "text": "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.",
     "count": 100,
