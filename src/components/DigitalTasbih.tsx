@@ -40,7 +40,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
   const [customPhrase, setCustomPhrase] = useState<string>('');
   const [savedPhrases, setSavedPhrases] = useState<string[]>(() => {try {const v=JSON.parse(storage.getItem('anees_saved_tasbih')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,30):[];}catch{return [];}});
   const [phraseTotals,setPhraseTotals]=useState<Record<string,number>>(()=>{
-    try {const v=JSON.parse(storage.getItem('anees_tasbih_phrase_totals')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).filter(([key,n])=>key.length<200&&typeof n==='number'&&Number.isSafeInteger(n)&&n>=0)):{};}catch{return {};}
+    try {const v=JSON.parse(storage.getItem('anees_tasbih_phrase_totals')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).filter((entry):entry is [string,number]=>{const [key,n]=entry;return key.length<200&&typeof n==='number'&&Number.isSafeInteger(n)&&n>=0;})):{};}catch{return {};}
   });
   const [hiddenPhrases,setHiddenPhrases]=useState<string[]>(()=>{
     try {const v=JSON.parse(storage.getItem('anees_tasbih_hidden_phrases')||'[]');return Array.isArray(v)?v.filter((x:unknown)=>typeof x==='string').slice(0,50):[];}catch{return [];}
