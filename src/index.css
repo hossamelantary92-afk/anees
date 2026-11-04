@@ -846,3 +846,17 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
     background-position:center,center 84%,center;
   }
 }
+
+/* Approved Quba card crop, with all live timings and radio unchanged. */
+.anees-next.anees-mosque-card{
+ background:linear-gradient(to left,#092f26 0%,rgba(9,47,38,.99) 26%,rgba(9,47,38,.84) 45%,rgba(9,47,38,.18) 66%,transparent 85%),
+ url("/images/quba-approved-prayer.webp") left center / 57% 100% no-repeat,#092f26;
+ background-position:center,left center,center;
+ border-color:#d5ae65;
+}
+.anees-next.anees-mosque-card .anees-next-text{position:relative;z-index:2;}
+@media(max-width:767px){.anees-next.anees-mosque-card{
+ background:linear-gradient(to left,#092f26 0%,rgba(9,47,38,.99) 25%,rgba(9,47,38,.80) 45%,rgba(9,47,38,.12) 67%,transparent 84%),
+ url("/images/quba-approved-prayer.webp") left center / 57% 100% no-repeat,#092f26;
+ background-position:center,left center,center;
+}}
