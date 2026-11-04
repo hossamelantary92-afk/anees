@@ -55,11 +55,12 @@ export function PrayerRadio(){
  const [prayerPanel,setPrayerPanel]=useState<'qibla'|'details'|null>(null);
  const [compassHeading,setCompassHeading]=useState<number|null>(null);
  const [compassMessage,setCompassMessage]=useState('');
+ const lastAlignmentRef=useRef(false);
  useEffect(()=>{
    if(prayerPanel!=='qibla')return;
    const handler=(event:DeviceOrientationEvent)=>{
      const heading=(event as DeviceOrientationEvent & {webkitCompassHeading?:number}).webkitCompassHeading;
-     if(typeof heading==='number'&&Number.isFinite(heading)){setCompassHeading(heading);setCompassMessage('');}
+     if(typeof heading==='number'&&Number.isFinite(heading)){setCompassHeading((heading%360+360)%360);setCompassMessage('');}
    };
    window.addEventListener('deviceorientation',handler,true);
    return()=>{window.removeEventListener('deviceorientation',handler,true);};
@@ -196,6 +197,13 @@ export function PrayerRadio(){
  const countdown=[Math.floor(remaining/3600),Math.floor(remaining%3600/60),remaining%60].map(n=>String(n).padStart(2,'0')).join(':');
  const locate=()=>refreshLocation(true,true);
  const qibla=Math.round(qiblaBearing(loc.lat,loc.lon));
+ const qiblaOffset=compassHeading===null?null:((qibla-compassHeading+540)%360)-180;
+ const qiblaAligned=qiblaOffset!==null&&Math.abs(qiblaOffset)<=7;
+ useEffect(()=>{
+   if(prayerPanel!=='qibla'||qiblaOffset===null){lastAlignmentRef.current=false;return;}
+   if(qiblaAligned&&!lastAlignmentRef.current&&typeof navigator.vibrate==='function')navigator.vibrate(35);
+   lastAlignmentRef.current=qiblaAligned;
+ },[prayerPanel,qiblaAligned,qiblaOffset===null]);
  const nightStart=loadedDay&&maghrib?cityTimeToEpoch(loadedDay,maghrib,prayerTimeZone):0;
  const nightEnd=loadedDay&&tomorrowFajr?cityTimeToEpoch(addCalendarDay(loadedDay,1),tomorrowFajr,prayerTimeZone):0;
  const midnight=nightStart&&nightEnd?nightStart+(nightEnd-nightStart)/2:0;
@@ -212,7 +220,15 @@ export function PrayerRadio(){
  const locationControl=<div className="anees-location anees-welcome-location" dir="rtl"><MapPin size={17} aria-hidden="true"/><select aria-label="اختر المدينة أو موقعي الحالي" value={mode==='auto'?'auto':loc.label} onChange={e=>{if(e.target.value==='auto'){locate();return;}const c=cities.find(x=>x.label===e.target.value);if(c)setManualCity(c);}}><option value="auto">موقعي الحالي</option>{cities.map(c=><option key={c.label} value={c.label}>{c.label}</option>)}</select><button type="button" onClick={locate} disabled={locating} title={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-label={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-busy={locating} className={locating||updatingPrayers?'anees-location-locating':''}><LocateFixed size={18}/></button></div>;
  return <><section className="anees-dashboard" dir="rtl" aria-label="مواقيت الصلاة وإذاعة القرآن">
  <div className="anees-welcome"><div><span className="anees-eyebrow">رفيقك في الذكر والعبادة</span><h1>أنيس <span>✦</span></h1><p>جعل الله يومك مباركًا</p></div>{locationControl}</div><span className="sr-only" role="status" aria-live="polite">{locating?'جاري تحديد موقعك الحالي…':updatingPrayers?'جاري تحديث مواقيت الصلاة':''}</span>{locationError&&<p className="anees-location-feedback anees-location-error" role="alert">{locationError}</p>}
- <div className="anees-next anees-mosque-card"><div className="anees-mosque-illustration" aria-hidden="true"><svg viewBox="0 0 250 155" fill="currentColor"><path d="M0 152h250v-8h-21V70h-10V47l-5-8-5 8v23h-8v74h-22v-40h-12V89c0-31-19-52-44-62V14h-6V6h-4v8h-6v13c-25 10-44 31-44 62v15H51v40H29V70h-8V47l-5-8-5 8v23H1v74H0z"/><path d="M85 143v-24c0-14 12-25 26-25s26 11 26 25v24" fill="#123d30"/></svg></div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || '—'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
+ <div className="anees-next anees-mosque-card"><div className="anees-mosque-illustration" aria-hidden="true"><svg viewBox="0 0 470 260" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+ <defs><linearGradient id="anees-mosque-gold" x1="0" y1="0" x2=".72" y2="1"><stop stopColor="#e8d09a"/><stop offset=".55" stopColor="#ab8750"/><stop offset="1" stopColor="#4c6a51"/></linearGradient><linearGradient id="anees-mosque-depth" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#a7b391"/><stop offset="1" stopColor="#315b49"/></linearGradient><radialGradient id="anees-mosque-halo"><stop stopColor="#d8b86c" stopOpacity=".36"/><stop offset="1" stopColor="#d8b86c" stopOpacity="0"/></radialGradient></defs>
+ <ellipse cx="220" cy="125" rx="220" ry="120" fill="url(#anees-mosque-halo)"/>
+ <path d="M0 218 Q50 187 95 206 T200 202 T300 199 T470 205 V260H0Z" fill="#31604e" opacity=".5"/>
+ <g fill="url(#anees-mosque-depth)" opacity=".68"><path d="M0 195h38v-63h8v-10h8v73h32v65H0z"/><path d="M340 182h23v-64h7v-12h8v76h42v78h-80z"/><path d="M425 204h12v-92h7v-13h9v105h17v56h-45z"/></g>
+ <g fill="url(#anees-mosque-gold)"><path d="M65 257v-68h31v-27c0-40 34-73 76-84v-11h15v11c42 11 75 44 75 84v27h29v68z"/><path d="M107 96c12-18 38-37 72-41 34 4 60 23 72 41-20-8-46-12-72-12s-52 4-72 12z" opacity=".45"/><rect x="176" y="48" width="7" height="26" rx="2"/><path d="M179 34l-11 17h22z"/><path d="M35 257V97h17v160zM30 97h27L44 78zM42 68h3v12h-3z"/><path d="M292 257V81h18v176zM288 81h26L301 59zM299 48h3v12h-3z"/><path d="M367 257v-139h15v139zM363 118h23l-11-22z"/><path d="M67 257v-46h227v46z" fill="#8c8c62"/></g>
+ <g fill="#143d32" opacity=".87"><path d="M147 258v-44c0-16 14-30 31-30s31 14 31 30v44z"/><path d="M84 232v-19c0-9 7-17 16-17s16 8 16 17v19zM228 232v-19c0-9 7-17 16-17s16 8 16 17v19z"/><path d="M38 153v-17c0-4 4-8 7-8s7 4 7 8v17zM296 146v-15c0-4 3-7 6-7s6 3 6 7v15z"/></g>
+ <g fill="#f3dca3" opacity=".6"><rect x="36" y="169" width="3" height="49"/><rect x="302" y="169" width="3" height="49"/><path d="M97 192h162v3H97z"/></g>
+ </svg></div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || '—'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
  <div className="anees-times"><div className="anees-section-heading"><h2>مواقيت الصلاة اليوم</h2><span>{formatCalendarDate(new Date(now),calendar,{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:prayerTimeZone})}</span></div><div className="anees-prayer-grid">{names.map((n,i)=>{const t=times.find(x=>x.key===n.key);return <div className={`anees-prayer ${next?.key===n.key?'upcoming':''}`} key={n.key}><span className="anees-prayer-icon">{['☾','☀','☼','◒','☽'][i]}</span><strong>{n.name}</strong><span dir="ltr">{t?.time || '--:--'}</span></div>;})}</div><div className="anees-prayer-tools"><button type="button" onClick={()=>setPrayerPanel('qibla')}><Compass size={19}/>اتجاه القبلة</button><button type="button" onClick={()=>setPrayerPanel('details')}><CalendarClock size={19}/>تفاصيل الصلاة</button></div><small>المواقيت حسابية وقد تختلف قليلًا عن تقويم المسجد المحلي.</small></div>
  <div className="anees-radio"><div className="anees-radio-heading"><Radio size={24}/><div><h2>إذاعة القرآن الكريم من القاهرة</h2><span>بث مباشر عبر الإنترنت</span></div></div><div className="anees-radio-controls"><button className="anees-play" onClick={toggle} disabled={loading} aria-label={playing?'إيقاف الإذاعة':'تشغيل الإذاعة'}>{playing?<Pause fill="currentColor"/>:<Play fill="currentColor"/>}</button><div className="anees-radio-wave" aria-hidden="true">▂ ▄ ▆ ▃ ▇ ▅ ▂ ▆ ▄ ▇ ▃ ▅ ▂ ▇ ▄ ▆ ▃ ▅ ▂ ▆</div><label><Moon size={15}/><select value={sleep} aria-label="مؤقت النوم" onChange={e=>setSleep(Number(e.target.value))}><option value={0}>مؤقت النوم</option><option value={15}>15 دقيقة</option><option value={30}>30 دقيقة</option><option value={60}>60 دقيقة</option></select></label></div><audio ref={audio} preload="none" onPause={()=>setPlaying(false)} onPlaying={()=>setPlaying(true)} onError={()=>{setPlaying(false);setError('تعذّر الاتصال ببث الإذاعة.');}} /></div>
  {error&&<p className="anees-error" role="status">{error}</p>}
@@ -221,10 +237,15 @@ export function PrayerRadio(){
   <section className="anees-prayer-modal" role="dialog" aria-modal="true" aria-label={prayerPanel==='qibla'?'اتجاه القبلة':'تفاصيل الصلاة'} dir="rtl" onClick={e=>e.stopPropagation()}>
    <header className="anees-prayer-modal-header"><h2>{prayerPanel==='qibla'?'اتجاه القبلة':'تفاصيل الصلاة'}</h2><button type="button" aria-label="إغلاق النافذة" onClick={()=>setPrayerPanel(null)}><X size={21}/></button></header>
    {prayerPanel==='qibla'?<div className="anees-qibla-body">
-    <div className="anees-qibla-compass" aria-label={`اتجاه القبلة ${qibla} درجة من الشمال`}><span className="anees-qibla-north">ش</span><div className="anees-qibla-arrow" style={{transform:`translate(-50%,-50%) rotate(${qibla-(compassHeading||0)}deg)`}}><span>◆</span></div><span className="anees-qibla-kaaba">◆</span></div>
-    <strong className="anees-qibla-degrees" dir="ltr">{qibla}°</strong>
+    <div className={`anees-qibla-compass ${qiblaAligned?'anees-qibla-aligned':''}`} aria-label={`اتجاه القبلة ${qibla} درجة من الشمال`}>
+      <span className="anees-qibla-north">ش</span><span className="anees-qibla-east">شـر</span><span className="anees-qibla-south">ج</span><span className="anees-qibla-west">غ</span>
+      <div className="anees-qibla-needle" style={{transform:`translate(-50%,-50%) rotate(${qibla-(compassHeading||0)}deg)`}}>
+       <svg viewBox="0 0 68 190" aria-hidden="true" focusable="false"><defs><linearGradient id="anees-needle-shine" x1="0" x2="1"><stop stopColor="#fff0c7"/><stop offset="1" stopColor="#c49a50"/></linearGradient></defs><path d="M34 5L57 94H34Z" fill="url(#anees-needle-shine)"/><path d="M34 5L11 94H34Z" fill="#f7dca3"/><path d="M11 94L34 182V94Z" fill="#2d6855"/><path d="M57 94L34 182V94Z" fill="#173d31"/></svg>
+      </div><div className="anees-qibla-hub" aria-hidden="true">✦</div>
+    </div>
+    <strong className="anees-qibla-degrees" dir="ltr">{qibla}°</strong>{qiblaAligned&&<div className="anees-qibla-success" role="status">✓ أنت في اتجاه القبلة</div>}
     <p>اتجاه القبلة من الشمال الجغرافي · {loc.label}</p>
-    <p className="anees-qibla-help">{compassHeading===null?'السهم يشير للقبلة بافتراض أن أعلى الشاشة شمال؛ اسمح ببوصلة الجهاز لتحريك السهم مع اتجاه الهاتف.':'البوصلة تتبع اتجاه الهاتف؛ أبعده عن المعادن والمغناطيس.'}</p>
+    <p className="anees-qibla-help">{compassHeading===null?'السهم يشير للقبلة بافتراض أن أعلى الشاشة شمال؛ اسمح ببوصلة الجهاز لتحريك السهم مع اتجاه الهاتف.':'حرّك الهاتف ببطء؛ ستضيء البوصلة عند محاذاة اتجاه القبلة.'}</p>
     {compassHeading===null&&<button className="anees-qibla-enable" type="button" onClick={askCompass}>تفعيل بوصلة الهاتف</button>}
     {compassMessage&&<p role="status" className="anees-qibla-help">{compassMessage}</p>}
    </div>:<div className="anees-prayer-detail-list">
