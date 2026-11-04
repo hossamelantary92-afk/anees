@@ -1,6 +1,6 @@
 import {formatCalendarDate,calendarPreference} from '../utils/calendar';
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Radio, Play, Pause, Moon, Clock3, LocateFixed } from 'lucide-react';
+import { MapPin, Radio, Play, Pause, Moon, Clock3, LocateFixed, Compass, CalendarClock, X, Sunrise, Sunset, MoonStar } from 'lucide-react';
 
 type Prayer = { name:string; key:string; time:string };
 const names = [{name:'الفجر',key:'Fajr'},{name:'الظهر',key:'Dhuhr'},{name:'العصر',key:'Asr'},{name:'المغرب',key:'Maghrib'},{name:'العشاء',key:'Isha'}];
@@ -37,6 +37,13 @@ const cityTimeToEpoch = (day:string,time:string,timeZone:string) => {
  }
  return utc;
 };
+const qiblaBearing=(latitude:number,longitude:number)=>{
+ const toRad=Math.PI/180;
+ const phi=latitude*toRad,delta=(39.8262-longitude)*toRad,kaabaPhi=21.4225*toRad;
+ const angle=Math.atan2(Math.sin(delta),Math.cos(phi)*Math.tan(kaabaPhi)-Math.sin(phi)*Math.cos(delta));
+ return (angle*180/Math.PI+360)%360;
+};
+const formatZonedTime=(instant:number,zone:string)=>new Intl.DateTimeFormat('ar-SA',{timeZone:zone,hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(instant));
 export function PrayerRadio(){
  const [loc,setLoc]=useState<{label:string;lat:number;lon:number}>(()=>saved() || cities[0]);
  const [mode,setMode]=useState<'auto'|'manual'>(locationMode);
@@ -45,6 +52,26 @@ export function PrayerRadio(){
  const locationRequestId=useRef(0);
  const [locating,setLocating]=useState(false);
  const [locationError,setLocationError]=useState('');
+ const [prayerPanel,setPrayerPanel]=useState<'qibla'|'details'|null>(null);
+ const [compassHeading,setCompassHeading]=useState<number|null>(null);
+ const [compassMessage,setCompassMessage]=useState('');
+ useEffect(()=>{
+   if(prayerPanel!=='qibla')return;
+   const handler=(event:DeviceOrientationEvent)=>{
+     const heading=(event as DeviceOrientationEvent & {webkitCompassHeading?:number}).webkitCompassHeading;
+     if(typeof heading==='number'&&Number.isFinite(heading)){setCompassHeading(heading);setCompassMessage('');}
+   };
+   window.addEventListener('deviceorientation',handler,true);
+   return()=>{window.removeEventListener('deviceorientation',handler,true);};
+ },[prayerPanel]);
+ const askCompass=async()=>{
+   const orientation=DeviceOrientationEvent as typeof DeviceOrientationEvent & {requestPermission?:()=>Promise<'granted'|'denied'>};
+   if(typeof orientation.requestPermission!=='function'){setCompassMessage('لو البوصلة مش بتتحرك، استخدم زاوية القبلة من الشمال.');return;}
+   try{
+     if(await orientation.requestPermission()==='granted')setCompassMessage('حرّك الهاتف حركة رقم 8 لمعايرة البوصلة إذا لزم الأمر.');
+     else setCompassMessage('لم يتم السماح بمستشعر اتجاه الجهاز. زاوية القبلة من الشمال متاحة.');
+   }catch{setCompassMessage('تعذر تشغيل مستشعر الاتجاه؛ يمكنك استخدام زاوية القبلة من الشمال.');}
+ };
  useEffect(()=>{modeRef.current=mode;try{localStorage.setItem('anees_prayer_location_mode',mode);}catch{}},[mode]);
  const setManualCity=(city:typeof cities[number])=>{
    // Invalidate any pending GPS callback so it cannot override the manual choice.
@@ -113,10 +140,10 @@ export function PrayerRadio(){
  },[]);
  // Keep a complete timetable snapshot, so city, timezone, countdown and times
  // switch together on one React commit instead of showing half-updated data.
- const [timetable,setTimetable]=useState<{times:Prayer[];tomorrowFajr:string;prayerTimeZone:string;loadedDay:string}>({
-   times:[],tomorrowFajr:'',prayerTimeZone:'Asia/Riyadh',loadedDay:''
+ const [timetable,setTimetable]=useState<{times:Prayer[];tomorrowFajr:string;sunrise:string;maghrib:string;prayerTimeZone:string;loadedDay:string}>({
+   times:[],tomorrowFajr:'',sunrise:'',maghrib:'',prayerTimeZone:'Asia/Riyadh',loadedDay:''
  });
- const {times,tomorrowFajr,prayerTimeZone,loadedDay}=timetable;
+ const {times,tomorrowFajr,sunrise,maghrib,prayerTimeZone,loadedDay}=timetable;
  const [updatingPrayers,setUpdatingPrayers]=useState(false);
  const [now,setNow]=useState(Date.now());
  const [error,setError]=useState('');
@@ -153,7 +180,9 @@ export function PrayerRadio(){
        prayerTimeZone:timezone,
        loadedDay:localDay,
        times:names.map(n=>({...n,time:today.timings[n.key].slice(0,5)})),
-       tomorrowFajr:tomorrow.timings.Fajr.slice(0,5)
+       tomorrowFajr:tomorrow.timings.Fajr.slice(0,5),
+       sunrise:today.timings.Sunrise.slice(0,5),
+       maghrib:today.timings.Maghrib.slice(0,5)
      });
      setUpdatingPrayers(false);
    }catch(e){if(!ctl.signal.aborted){setUpdatingPrayers(false);setError('تعذّر تحديث المواقيت. ما زالت آخر مواقيت تم تحميلها ظاهرة.');}}})() ;
@@ -166,15 +195,47 @@ export function PrayerRadio(){
  const remaining=Math.max(0,Math.floor((target-now)/1000));
  const countdown=[Math.floor(remaining/3600),Math.floor(remaining%3600/60),remaining%60].map(n=>String(n).padStart(2,'0')).join(':');
  const locate=()=>refreshLocation(true,true);
+ const qibla=Math.round(qiblaBearing(loc.lat,loc.lon));
+ const nightStart=loadedDay&&maghrib?cityTimeToEpoch(loadedDay,maghrib,prayerTimeZone):0;
+ const nightEnd=loadedDay&&tomorrowFajr?cityTimeToEpoch(addCalendarDay(loadedDay,1),tomorrowFajr,prayerTimeZone):0;
+ const midnight=nightStart&&nightEnd?nightStart+(nightEnd-nightStart)/2:0;
+ const lastThird=nightStart&&nightEnd?nightStart+(nightEnd-nightStart)*2/3:0;
+ useEffect(()=>{
+   if(!prayerPanel)return;
+   const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setPrayerPanel(null);};
+   document.addEventListener('keydown',onKey);
+   return()=>document.removeEventListener('keydown',onKey);
+ },[prayerPanel]);
  useEffect(()=>{if(!('mediaSession' in navigator))return;try{navigator.mediaSession.metadata=new MediaMetadata({title:'إذاعة القرآن الكريم من القاهرة',artist:'أنيس',album:'بث مباشر'});navigator.mediaSession.setActionHandler('play',()=>{const a=audio.current;if(a)void a.play().catch(()=>{});});navigator.mediaSession.setActionHandler('pause',()=>{audio.current?.pause();});}catch{}return()=>{try{navigator.mediaSession.setActionHandler('play',null);navigator.mediaSession.setActionHandler('pause',null);}catch{}};},[]);
  const toggle=async()=>{const a=audio.current;if(!a)return;if(!a.paused){a.pause();setPlaying(false);return;}setLoading(true);setError('');try{a.src=RADIO[0];await a.play();setPlaying(true);}catch{setError('تعذّر تشغيل الإذاعة حاليًا. قد يكون مصدر البث غير متاح.');setPlaying(false);}finally{setLoading(false);}};
  useEffect(()=>{if(!sleep)return;const id=window.setTimeout(()=>{audio.current?.pause();setPlaying(false);setSleep(0);},sleep*60000);return()=>clearTimeout(id);},[sleep]);
  const locationControl=<div className="anees-location anees-welcome-location" dir="rtl"><MapPin size={17} aria-hidden="true"/><select aria-label="اختر المدينة أو موقعي الحالي" value={mode==='auto'?'auto':loc.label} onChange={e=>{if(e.target.value==='auto'){locate();return;}const c=cities.find(x=>x.label===e.target.value);if(c)setManualCity(c);}}><option value="auto">موقعي الحالي</option>{cities.map(c=><option key={c.label} value={c.label}>{c.label}</option>)}</select><button type="button" onClick={locate} disabled={locating} title={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-label={locating?'جاري تحديد موقعك':'تحديث موقعي الحالي'} aria-busy={locating} className={locating||updatingPrayers?'anees-location-locating':''}><LocateFixed size={18}/></button></div>;
  return <><section className="anees-dashboard" dir="rtl" aria-label="مواقيت الصلاة وإذاعة القرآن">
  <div className="anees-welcome"><div><span className="anees-eyebrow">رفيقك في الذكر والعبادة</span><h1>أنيس <span>✦</span></h1><p>جعل الله يومك مباركًا</p></div>{locationControl}</div><span className="sr-only" role="status" aria-live="polite">{locating?'جاري تحديد موقعك الحالي…':updatingPrayers?'جاري تحديث مواقيت الصلاة':''}</span>{locationError&&<p className="anees-location-feedback anees-location-error" role="alert">{locationError}</p>}
- <div className="anees-next"><div className="anees-lantern">☪</div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || '—'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
- <div className="anees-times"><div className="anees-section-heading"><h2>مواقيت الصلاة اليوم</h2><span>{formatCalendarDate(new Date(now),calendar,{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:prayerTimeZone})}</span></div><div className="anees-prayer-grid">{names.map((n,i)=>{const t=times.find(x=>x.key===n.key);return <div className={`anees-prayer ${next?.key===n.key?'upcoming':''}`} key={n.key}><span className="anees-prayer-icon">{['☾','☀','☼','◒','☽'][i]}</span><strong>{n.name}</strong><span dir="ltr">{t?.time || '--:--'}</span></div>;})}</div><small>المواقيت حسابية وقد تختلف قليلًا عن تقويم المسجد المحلي.</small></div>
+ <div className="anees-next anees-mosque-card"><div className="anees-mosque-illustration" aria-hidden="true"><svg viewBox="0 0 250 155" fill="currentColor"><path d="M0 152h250v-8h-21V70h-10V47l-5-8-5 8v23h-8v74h-22v-40h-12V89c0-31-19-52-44-62V14h-6V6h-4v8h-6v13c-25 10-44 31-44 62v15H51v40H29V70h-8V47l-5-8-5 8v23H1v74H0z"/><path d="M85 143v-24c0-14 12-25 26-25s26 11 26 25v24" fill="#123d30"/></svg></div><div className="anees-next-text"><span>الصلاة القادمة</span><h2 className="anees-fixed-prayer">{next?.name || '—'}</h2><div className="anees-countdown"><Clock3 size={20}/><b dir="ltr" className="anees-fixed-timer">{next?countdown:'--:--:--'}</b></div></div></div>
+ <div className="anees-times"><div className="anees-section-heading"><h2>مواقيت الصلاة اليوم</h2><span>{formatCalendarDate(new Date(now),calendar,{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:prayerTimeZone})}</span></div><div className="anees-prayer-grid">{names.map((n,i)=>{const t=times.find(x=>x.key===n.key);return <div className={`anees-prayer ${next?.key===n.key?'upcoming':''}`} key={n.key}><span className="anees-prayer-icon">{['☾','☀','☼','◒','☽'][i]}</span><strong>{n.name}</strong><span dir="ltr">{t?.time || '--:--'}</span></div>;})}</div><div className="anees-prayer-tools"><button type="button" onClick={()=>setPrayerPanel('qibla')}><Compass size={19}/>اتجاه القبلة</button><button type="button" onClick={()=>setPrayerPanel('details')}><CalendarClock size={19}/>تفاصيل الصلاة</button></div><small>المواقيت حسابية وقد تختلف قليلًا عن تقويم المسجد المحلي.</small></div>
  <div className="anees-radio"><div className="anees-radio-heading"><Radio size={24}/><div><h2>إذاعة القرآن الكريم من القاهرة</h2><span>بث مباشر عبر الإنترنت</span></div></div><div className="anees-radio-controls"><button className="anees-play" onClick={toggle} disabled={loading} aria-label={playing?'إيقاف الإذاعة':'تشغيل الإذاعة'}>{playing?<Pause fill="currentColor"/>:<Play fill="currentColor"/>}</button><div className="anees-radio-wave" aria-hidden="true">▂ ▄ ▆ ▃ ▇ ▅ ▂ ▆ ▄ ▇ ▃ ▅ ▂ ▇ ▄ ▆ ▃ ▅ ▂ ▆</div><label><Moon size={15}/><select value={sleep} aria-label="مؤقت النوم" onChange={e=>setSleep(Number(e.target.value))}><option value={0}>مؤقت النوم</option><option value={15}>15 دقيقة</option><option value={30}>30 دقيقة</option><option value={60}>60 دقيقة</option></select></label></div><audio ref={audio} preload="none" onPause={()=>setPlaying(false)} onPlaying={()=>setPlaying(true)} onError={()=>{setPlaying(false);setError('تعذّر الاتصال ببث الإذاعة.');}} /></div>
  {error&&<p className="anees-error" role="status">{error}</p>}
- </section></>;
+ </section>
+ {prayerPanel&&<div className="anees-prayer-modal-backdrop" onClick={()=>setPrayerPanel(null)}>
+  <section className="anees-prayer-modal" role="dialog" aria-modal="true" aria-label={prayerPanel==='qibla'?'اتجاه القبلة':'تفاصيل الصلاة'} dir="rtl" onClick={e=>e.stopPropagation()}>
+   <header className="anees-prayer-modal-header"><h2>{prayerPanel==='qibla'?'اتجاه القبلة':'تفاصيل الصلاة'}</h2><button type="button" aria-label="إغلاق النافذة" onClick={()=>setPrayerPanel(null)}><X size={21}/></button></header>
+   {prayerPanel==='qibla'?<div className="anees-qibla-body">
+    <div className="anees-qibla-compass" aria-label={`اتجاه القبلة ${qibla} درجة من الشمال`}><span className="anees-qibla-north">ش</span><div className="anees-qibla-arrow" style={{transform:`translate(-50%,-50%) rotate(${qibla-(compassHeading||0)}deg)`}}><span>◆</span></div><span className="anees-qibla-kaaba">◆</span></div>
+    <strong className="anees-qibla-degrees" dir="ltr">{qibla}°</strong>
+    <p>اتجاه القبلة من الشمال الجغرافي · {loc.label}</p>
+    <p className="anees-qibla-help">{compassHeading===null?'السهم يشير للقبلة بافتراض أن أعلى الشاشة شمال؛ اسمح ببوصلة الجهاز لتحريك السهم مع اتجاه الهاتف.':'البوصلة تتبع اتجاه الهاتف؛ أبعده عن المعادن والمغناطيس.'}</p>
+    {compassHeading===null&&<button className="anees-qibla-enable" type="button" onClick={askCompass}>تفعيل بوصلة الهاتف</button>}
+    {compassMessage&&<p role="status" className="anees-qibla-help">{compassMessage}</p>}
+   </div>:<div className="anees-prayer-detail-list">
+    {names.map(n=><div key={n.key}><span>{n.name}</span><strong dir="ltr">{times.find(t=>t.key===n.key)?.time||'--:--'}</strong></div>)}
+    <div><span><Sunrise size={19}/>الشروق</span><strong dir="ltr">{sunrise||'--:--'}</strong></div>
+    <div><span><Sunset size={19}/>غروب الشمس</span><strong dir="ltr">{maghrib||'--:--'}</strong></div>
+    <div><span><MoonStar size={19}/>منتصف الليل الشرعي</span><strong>{midnight?formatZonedTime(midnight,prayerTimeZone):'—'}</strong></div>
+    <div><span><MoonStar size={19}/>بداية الثلث الأخير</span><strong>{lastThird?formatZonedTime(lastThird,prayerTimeZone):'—'}</strong></div>
+    <p>منتصف الليل والثلث الأخير محسوبان من مغرب اليوم إلى فجر الغد، وفق المواقيت الحسابية للموقع المحدد.</p>
+   </div>}
+  </section>
+ </div>}
+ </>;
 }
