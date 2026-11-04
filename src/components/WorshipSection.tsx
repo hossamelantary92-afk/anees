@@ -50,8 +50,9 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  const fridayRecord=data.days[fridayDate]||createPlannedDay(data.plan,fridayDate);
  const toggleFridayAct=(value:string)=>{
    const old=fridayRecord.fridayActs||[];
-   const next=old.includes(value)?old.filter(v=>v!==value):[...old,value];
-   commit({...data,days:{...data.days,[fridayDate]:{...fridayRecord,fridayActs:next,recorded:true}}},'تم تحديث سنن الجمعة');
+   const already=old.includes(value)||(value==='salawat'&&!!fridayRecord.fridayDone);
+   const next=already?old.filter(v=>v!==value):[...old,value];
+   commit({...data,days:{...data.days,[fridayDate]:{...fridayRecord,fridayActs:next,...(value==='salawat'?{fridayDone:!already}:{}),recorded:true}}},'تم تحديث سنن الجمعة');
  };
  const plan=data.plan;const dayPlan=record.snapshot||plan;
  const commit=(next:WorshipData,label='تم حفظ التغيير')=>{setUndo({data,label});setData(next);};
@@ -98,7 +99,7 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
   ['early','التبكير للمسجد','والإنصات للخطبة'],
   ['salawat','الإكثار من الصلاة على النبي ﷺ','اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ'],
   ['dua','الدعاء وتحري ساعة الإجابة','مع الاختلاف في تحديد ساعة الإجابة']
- ].map(([id,label,detail])=><React.Fragment key={id}>{check(label,(fridayRecord.fridayActs||[]).includes(id),()=>toggleFridayAct(id),detail)}</React.Fragment>)}
+ ].map(([id,label,detail])=><React.Fragment key={id}>{check(label,((fridayRecord.fridayActs||[]).includes(id)||(id==='salawat'&&!!fridayRecord.fridayDone)),()=>toggleFridayAct(id),detail)}</React.Fragment>)}
  </div></>,
  custom:<><h2 className="font-bold mb-3">عاداتي الخاصة</h2><div className="space-y-2">{dayPlan.custom.filter(v=>!plan.hiddenCustom?.includes(v.id)).map(v=><React.Fragment key={v.id}>{check(v.label,record.custom.includes(v.id),()=>toggle('custom',v.id))}</React.Fragment>)}</div></>
  };
