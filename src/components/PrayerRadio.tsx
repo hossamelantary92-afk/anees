@@ -55,16 +55,14 @@ export function PrayerRadio(){
  const [prayerPanel,setPrayerPanel]=useState<'qibla'|'details'|null>(null);
  const [compassHeading,setCompassHeading]=useState<number|null>(null);
  const [compassMessage,setCompassMessage]=useState('');
- const orientationRef=useRef<(event:DeviceOrientationEvent)=>void>();
  useEffect(()=>{
    if(prayerPanel!=='qibla')return;
    const handler=(event:DeviceOrientationEvent)=>{
      const heading=(event as DeviceOrientationEvent & {webkitCompassHeading?:number}).webkitCompassHeading;
      if(typeof heading==='number'&&Number.isFinite(heading)){setCompassHeading(heading);setCompassMessage('');}
    };
-   orientationRef.current=handler;
    window.addEventListener('deviceorientation',handler,true);
-   return()=>{window.removeEventListener('deviceorientation',handler,true);orientationRef.current=undefined;};
+   return()=>{window.removeEventListener('deviceorientation',handler,true);};
  },[prayerPanel]);
  const askCompass=async()=>{
    const orientation=DeviceOrientationEvent as typeof DeviceOrientationEvent & {requestPermission?:()=>Promise<'granted'|'denied'>};
