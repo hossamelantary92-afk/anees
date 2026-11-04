@@ -487,3 +487,50 @@ select option:disabled { color:#78716c; }
   border-color:#bd8464;
 }
 .anees-location button:disabled {opacity:.5;cursor:progress;}
+
+/* Tasbih Pro: compact emerald-and-gold controls, easy one-handed tapping */
+.anees-tasbih-pro,.anees-tasbih-manage{
+  margin-top:16px;padding:14px;border:1px solid rgba(201,166,92,.46);
+  border-radius:18px;background:rgba(201,166,92,.08);
+  color:inherit;
+}
+.anees-tasbih-manage-toggle{
+  display:inline-flex;margin-top:12px;min-height:40px;align-items:center;
+  font-size:13px;font-weight:700;color:#167454;
+  text-decoration:underline;text-underline-offset:4px;
+}
+.dark .anees-tasbih-manage-toggle{color:#e3c47b;}
+.anees-tasbih-phrase-row{
+  display:flex;align-items:center;gap:7px;min-height:44px;
+  padding:7px 9px;border:1px solid rgba(201,166,92,.28);
+  border-radius:12px;background:rgba(255,255,255,.07);
+}
+.anees-tasbih-phrase-row button{
+  flex:none;display:grid;place-items:center;min-width:32px;min-height:36px;
+  border-radius:8px;background:rgba(201,166,92,.15);
+}
+.anees-tasbih-phrase-row button:disabled{opacity:.3;}
+.anees-tasbih-visibility,.anees-tasbih-chip,.anees-tasbih-action{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:6px 11px;border:1px solid rgba(201,166,92,.4);
+  border-radius:999px;min-height:38px;font-size:12px;
+}
+.anees-tasbih-chip[aria-pressed=true],.anees-tasbih-action[aria-pressed=true]{
+  background:#23654a;color:#fff1cf;border-color:#c9a65c;
+}
+.anees-tasbih-number{
+  width:90px;min-height:40px;padding:7px 10px;border-radius:12px;
+  border:1px solid #c9a65c;background:#fffaf1;color:#143e31;
+  font-size:14px;text-align:center;
+}
+.anees-tasbih-auto-start{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;padding:10px 22px;border-radius:14px;
+  color:#fff5da;background:#126348;font-size:14px;font-weight:700;
+}
+.anees-one-hand .relative > svg{width:min(77vw,340px);height:min(77vw,340px);}
+.anees-one-hand .relative > button[aria-label="تسبيح"]{touch-action:manipulation;}
+@media(max-width:420px){
+  .anees-tasbih-pro,.anees-tasbih-manage{padding:12px;}
+  .anees-tasbih-number{width:82px;}
+}
