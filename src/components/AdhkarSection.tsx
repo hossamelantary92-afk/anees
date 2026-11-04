@@ -76,18 +76,34 @@ export const AdhkarSection: React.FC<Props> = props => {
  const [searchOpen,setSearchOpen]=useState(false);
  const [toolsOpen,setToolsOpen]=useState(false);
  const [confirmReset, setConfirmReset] = useState(false);
+ const [actionNotice,setActionNotice]=useState('');
+ useEffect(()=>{if(!actionNotice)return;const id=window.setTimeout(()=>setActionNotice(''),2200);return()=>window.clearTimeout(id);},[actionNotice]);
  useEffect(() => { storage.setItem('hisn_category',JSON.stringify(category)); },[category]);
  useEffect(()=>{storage.setItem('anees_dua_scope_counts',JSON.stringify({date:new Date().toLocaleDateString('en-CA'),counts:duaCounts}));},[duaCounts]);
  const scopedCount=(d:DhikrItem)=>selectedDuaGroup&&!props.favoritesOnly?(duaCounts[selectedDuaGroup+':'+d.id]??d.count):(props.remainingCounts[d.id]??d.count);
- const changeDuaCount=(id:string,step:number)=>{
+ const changeDuaCount=(id:string,action:'decrement'|'undo'|'reset')=>{
   if(!selectedDuaGroup||props.favoritesOnly)return;
   const item=ALL_ADHKAR.find(d=>d.id===id);if(!item)return;
   const key=selectedDuaGroup+':'+id;
-  setDuaCounts(prev=>({...prev,[key]:Math.max(0,Math.min(item.count,(prev[key]??item.count)+step))}));
+  setDuaCounts(prev=>{
+   const current=prev[key]??item.count;
+   const next=action==='reset'?item.count:action==='undo'?Math.min(item.count,current+1):Math.max(0,current-1);
+   return {...prev,[key]:next};
+  });
+  if(action!=='decrement')setActionNotice(action==='undo'?'تم التراجع عن آخر ضغطة':'تمت إعادة ضبط العداد');
+ };
+ const undoItem=(id:string)=>{
+  if(selectedDuaGroup&&!props.favoritesOnly)changeDuaCount(id,'undo');
+  else {props.onUndo(id);setActionNotice('تم التراجع عن آخر ضغطة');}
+ };
+ const resetItem=(id:string)=>{
+  if(selectedDuaGroup&&!props.favoritesOnly)changeDuaCount(id,'reset');
+  else {props.onReset(id);setActionNotice('تمت إعادة ضبط العداد');}
  };
  const resetDuaGroup=()=>{
   const prefix=selectedDuaGroup+':';
   setDuaCounts(prev=>Object.fromEntries(Object.entries(prev).filter(([key])=>!key.startsWith(prefix))));
+  setActionNotice('تمت إعادة ضبط أدعية هذا القسم');
  };
  useEffect(() => { storage.setItem('hisn_display_adhkar',JSON.stringify(displaySettings.adhkar)); storage.setItem('hisn_display_favorites',JSON.stringify(displaySettings.favorites)); },[displaySettings]);
  useEffect(() => { storage.setItem('hisn_positions',JSON.stringify(positions)); },[positions]);
@@ -115,7 +131,7 @@ export const AdhkarSection: React.FC<Props> = props => {
  const decrement = (id: string) => {
    const d = ALL_ADHKAR.find(v => v.id === id)!;
    if (autoNext && mode === 'focus' && filter === 'all' && scopedCount(d) === 1 && position < rows.length-1) move(position+1);
-   if(selectedDuaGroup&&!props.favoritesOnly)changeDuaCount(id,-1);
+   if(selectedDuaGroup&&!props.favoritesOnly)changeDuaCount(id,'decrement');
    else props.onCountDecrement(id);
  };
  const btn = 'px-4 py-2.5 rounded-xl text-sm border border-stone-200 dark:border-stone-700 transition-colors';
@@ -129,16 +145,17 @@ export const AdhkarSection: React.FC<Props> = props => {
    <label className="anees-category-picker"><span className="anees-picker-title"><BookOpen size={18}/> الأذكار</span><select aria-label="اختيار قسم الأذكار" className="worship-input w-full font-semibold text-sm" value={selectedDuaGroup?'':selectedCategory} onChange={e=>changeCategory(e.target.value)}><option value="" disabled>اختر قسم الأذكار</option>{DHIKR_CATEGORIES.filter(cat=>cat.id!=='dailyDuas'&&cat.id!=='dailyLife').map(cat=><option key={cat.id} value={cat.id}>{cat.name}</option>)}</select></label>
   </div>}
      {!props.favoritesOnly&&!!selectedDuaGroup&&<button type="button" className="anees-back-to-adhkar" onClick={()=>{changeCategory('morning');setPositions(p=>({...p,'morning:all':0}));}}><ChevronRight size={17}/> العودة لأذكار الصباح</button>}
+     {actionNotice&&<p className="anees-action-notice" role="status" aria-live="polite">{actionNotice}</p>}
      <div className="mb-4" aria-label="تقدم الورد"><div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400"><span>{query?'نتائج البحث: ':''}المكتمل {completed} من {base.length}</span><div className="flex items-center gap-2"><span className="text-emerald-700 dark:text-emerald-300 font-semibold">{progress}%</span>{!query&&category!=='favorites'&&<button onClick={()=>setConfirmReset(true)} aria-label="إعادة الورد" className="utility-action"><RotateCcw size={17}/></button>}</div></div><div role="progressbar" aria-label="تقدم الورد" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 transition-all" style={{width:`${progress}%`}}/></div></div>
      {!query&&category==='afterPrayer'&&<div className="flex items-center gap-3 mb-4 text-sm"><label htmlFor="prayer">ورد الصلاة</label><select id="prayer" value={prayer} onChange={e=>setPrayer(e.target.value)} className="worship-input flex-1 min-w-0">{['الفجر','الظهر','العصر','المغرب','العشاء'].map(v=><option key={v}>{v}</option>)}</select><span className="text-xs text-stone-500">تقدم مستقل</span></div>}
      <div className="flex items-center justify-between gap-2 mb-4" aria-label="أدوات القراءة"><button aria-expanded={searchOpen} aria-controls="adhkar-search" onClick={()=>{setSearchOpen(!searchOpen);if(searchOpen)setQuery('');}} aria-label={searchOpen?'إغلاق البحث':'البحث في الأذكار'} className={`utility-action border border-stone-200 dark:border-stone-700 ${searchOpen?'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200':''}`}>{searchOpen?<X size={20}/>:<Search size={20}/>}</button><div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-900"><button aria-pressed={mode==='focus'} onClick={()=>setMode('focus')} className={`utility-action text-sm ${mode==='focus'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><BookOpen size={18}/>قراءة</button><button aria-pressed={mode==='list'} onClick={()=>setMode('list')} className={`utility-action text-sm ${mode==='list'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><List size={18}/>قائمة</button></div><button aria-expanded={toolsOpen} onClick={()=>setToolsOpen(true)} aria-label="أدوات العرض" className="utility-action border border-stone-200 dark:border-stone-700 relative"><SlidersHorizontal size={20}/>{filter!=='all'&&<span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-600"/>}</button></div>
      {searchOpen&&<div id="adhkar-search" className="mb-4"><label className="sr-only" htmlFor="dhikr-query">البحث في الأذكار</label><input id="dhikr-query" autoFocus value={query} onChange={e=>{setQuery(e.target.value);setFilter('all');}} placeholder={props.favoritesOnly?'ابحث في أذكارك المفضلة…':'ابحث عن ذكر أو دعاء…'} className="worship-input w-full text-sm"/></div>}
      {filter!=='all'&&<button className="text-xs text-emerald-700 dark:text-emerald-300 mb-4 min-h-11" onClick={()=>setFilter('all')}>تصفية: {filter==='pending'?'المتبقية':'المكتملة'} · إلغاء التصفية ×</button>}
      {!rows.length&&<p className="text-center py-10 text-stone-500">{category==='favorites'&&!favorites.length?'اضغط على القلب بجوار أي ذكر لإضافته هنا.':'لا توجد أذكار مطابقة لهذا العرض.'}</p>}
-     <div className="space-y-5">{(mode==='focus'?rows.slice(position,position+1):rows).map(d=><DhikrCard key={d.id} dhikr={d} remainingCount={scopedCount(d)} onCountDecrement={decrement} onReset={id=>selectedDuaGroup&&!props.favoritesOnly?changeDuaCount(id,Infinity):props.onReset(id)} onUndo={id=>selectedDuaGroup&&!props.favoritesOnly?changeDuaCount(id,1):props.onUndo(id)} onOpenModal={props.onOpenModal} fontSize={props.fontSize} soundEnabled={props.soundEnabled} favorite={favorites.includes(d.id)} onFavorite={toggleFavorite}/>)}</div>
+     <div className="space-y-5">{(mode==='focus'?rows.slice(position,position+1):rows).map(d=><DhikrCard key={d.id} dhikr={d} remainingCount={scopedCount(d)} onCountDecrement={decrement} onReset={resetItem} onUndo={undoItem} onOpenModal={props.onOpenModal} fontSize={props.fontSize} soundEnabled={props.soundEnabled} favorite={favorites.includes(d.id)} onFavorite={toggleFavorite}/>)}</div>
      {mode==='focus'&&rows.length>0&&<nav aria-label="التنقل بين الأذكار" className="flex items-center justify-between gap-2 mt-4"><button aria-label="الذكر السابق" disabled={position===0} className="utility-action text-sm disabled:opacity-25" onClick={()=>move(position-1)}><ChevronRight size={20}/><span>السابق</span></button><span className="text-xs text-stone-500 whitespace-nowrap">الذكر {position+1} من {rows.length}</span><button aria-label="الذكر التالي" disabled={position===rows.length-1} className="utility-action text-sm disabled:opacity-25" onClick={()=>move(position+1)}><span>التالي</span><ChevronLeft size={20}/></button></nav>}
    </div>
    {toolsOpen&&<TrackerDialog label="أدوات العرض" onClose={()=>setToolsOpen(false)}><section className="tracker-panel"><div className="flex items-center justify-between gap-3 mb-4"><h2 className="font-bold text-lg">أدوات العرض</h2><button className="utility-action" onClick={()=>setToolsOpen(false)} aria-label="إغلاق أدوات العرض"><X size={22}/></button></div><label className="block text-sm">الأذكار المعروضة<select aria-label="تصفية الأذكار" value={filter} onChange={e=>setFilter(e.target.value as typeof filter)} className="worship-input w-full mt-2"><option value="all">الكل</option><option value="pending">المتبقية</option><option value="completed">المكتملة</option></select></label><label className="flex items-center justify-between gap-3 min-h-14 mt-3 text-sm"><span>انتقال تلقائي بعد إكمال الذكر</span><input type="checkbox" checked={autoNext} onChange={e=>setAutoNext(e.target.checked)}/></label><p className="text-xs text-stone-500 mb-4">يعمل الانتقال التلقائي في وضع القراءة عند عرض الكل.</p><button onClick={()=>setToolsOpen(false)} className="w-full min-h-12 bg-emerald-800 text-white rounded-xl font-bold">تم</button></section></TrackerDialog>}
-   {confirmReset&&<TrackerDialog label="إعادة الورد" onClose={()=>setConfirmReset(false)}><section className="tracker-panel"><h2 className="font-bold text-lg">بدء الورد من جديد؟</h2><p className="text-sm mt-3 mb-4">سيتم إعادة ضبط تقدم {selectedDuaGroup?duaGroups.find(d=>d.id===selectedDuaGroup)?.label:meta?.name} وإعادة عدّاداته إلى البداية.</p><div className="flex gap-3"><button className={`${btn} bg-emerald-800 text-white`} onClick={()=>{if(selectedDuaGroup&&!props.favoritesOnly)resetDuaGroup();else props.onResetCategory(category);setConfirmReset(false);move(0);}}>نعم، ابدأ من جديد</button><button className={btn} onClick={()=>setConfirmReset(false)}>إلغاء</button></div></section></TrackerDialog>}
+   {confirmReset&&<TrackerDialog label="إعادة الورد" onClose={()=>setConfirmReset(false)}><section className="tracker-panel"><h2 className="font-bold text-lg">بدء الورد من جديد؟</h2><p className="text-sm mt-3 mb-4">سيتم إعادة ضبط تقدم {selectedDuaGroup?duaGroups.find(d=>d.id===selectedDuaGroup)?.label:meta?.name} وإعادة عدّاداته إلى البداية.</p><div className="flex gap-3"><button className={`${btn} bg-emerald-800 text-white`} onClick={()=>{if(selectedDuaGroup&&!props.favoritesOnly)resetDuaGroup();else {props.onResetCategory(category);setActionNotice('تمت إعادة ضبط ورد الأذكار');}setConfirmReset(false);move(0);setFilter('all');}}>نعم، ابدأ من جديد</button><button className={btn} onClick={()=>setConfirmReset(false)}>إلغاء</button></div></section></TrackerDialog>}
  </div>;
 };
