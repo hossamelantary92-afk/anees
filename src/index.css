@@ -816,3 +816,33 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-next.anees-mosque-card{background-position:center,center,18% 55%,center;}
  .anees-tasbih-shell:before{background-position:center,center 55%,center;}
 }
+
+/* Screenshot-led visual corrections (iPhone): bright Quba, balanced crop, visible tasbih photo. */
+.anees-next.anees-mosque-card{
+  background:
+    linear-gradient(270deg,#072f26 0%,rgba(7,47,38,.99) 27%,rgba(7,47,38,.84) 48%,rgba(7,47,38,.04) 80%),
+    linear-gradient(0deg,rgba(7,47,38,.14),rgba(7,47,38,.02)),
+    url("https://portalcdn.spa.gov.sa/backend/original/202603/Dwp7Wezfvarr6rkER6gDrNutGupA7V2WXY9ONpp2.jpg") 18% 51% / cover no-repeat,
+    #0b3a2e;
+  background-position:center,center,18% 51%,center;
+}
+.anees-tasbih-shell:before,
+.dark .anees-tasbih-shell:before{
+  background:
+    linear-gradient(180deg,rgba(5,33,26,.16) 0%,rgba(6,32,26,.30) 35%,rgba(6,33,27,.32) 68%,rgba(5,31,25,.58) 100%),
+    url("/images/anees-tasbih-approved.webp") center 82% / cover no-repeat,
+    #103a2d;
+  background-position:center,center 82%,center;
+  opacity:1;
+}
+.anees-tasbih-shell .anees-tasbih-counter{
+  box-shadow:0 0 0 1px rgba(226,187,108,.72),0 14px 24px rgba(4,20,17,.24),inset 0 1px 20px rgba(8,65,48,.6);
+}
+@media(max-width:767px){
+  .anees-next.anees-mosque-card{
+    background-position:center,center,18% 58%,center;
+  }
+  .anees-tasbih-shell:before,.dark .anees-tasbih-shell:before{
+    background-position:center,center 84%,center;
+  }
+}
