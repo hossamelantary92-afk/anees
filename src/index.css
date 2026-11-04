@@ -735,3 +735,15 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-tasbih-shell:after{inset:8px;}
  .anees-dhikr-card:before{font-size:24px;}
 }
+
+/* Mobile usability fixes: always-legible dhikr controls and restrained decoration. */
+.anees-counter-action{min-height:44px;min-width:78px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(190,153,79,.45);border-radius:12px;position:relative;z-index:2;cursor:pointer;touch-action:manipulation;}
+.anees-counter-action:disabled{cursor:default;}
+.anees-dhikr-card .anees-counter-action:focus-visible{outline:2px solid #cca35d;outline-offset:3px;}
+.anees-action-notice{font-size:12px;margin:0 0 10px;padding:9px 12px;border:1px solid rgba(190,153,79,.5);border-radius:10px;background:rgba(27,94,69,.09);color:#176149;}
+.dark .anees-action-notice{color:#f0d9a8;background:#153e32;}
+.anees-worship-section:before{content:'✦';left:24px;top:8px;font-size:40px;opacity:.55;color:rgba(201,166,92,.08);}
+.anees-worship-emblem{width:48px;height:48px;opacity:.24;left:10px;top:12px;}
+.anees-worship-emblem svg{width:29px;height:29px;}
+.dark .anees-tasbih-shell:before{background:linear-gradient(180deg,rgba(8,42,33,.67),rgba(8,42,33,.72) 52%,rgba(8,42,33,.92) 100%),url("https://freerangestock.com/sample/36682/mosque.jpg") center 28% / cover no-repeat;}
+@media(max-width:390px){.anees-dhikr-card .anees-counter-action{min-width:64px;padding:7px;}.anees-dhikr-card .mt-5.pt-3{gap:5px;}}
