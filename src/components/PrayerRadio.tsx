@@ -201,8 +201,10 @@ export function PrayerRadio(){
  const qiblaAligned=qiblaOffset!==null&&Math.abs(qiblaOffset)<=7;
  useEffect(()=>{
    if(prayerPanel!=='qibla'||qiblaOffset===null){lastAlignmentRef.current=false;return;}
-   if(qiblaAligned&&!lastAlignmentRef.current&&typeof navigator.vibrate==='function')navigator.vibrate(35);
-   lastAlignmentRef.current=qiblaAligned;
+   if(qiblaAligned&&!lastAlignmentRef.current){
+     if(typeof navigator.vibrate==='function')navigator.vibrate(35);
+     lastAlignmentRef.current=true;
+   }else if(Math.abs(qiblaOffset)>12){lastAlignmentRef.current=false;}
  },[prayerPanel,qiblaAligned,qiblaOffset===null]);
  const nightStart=loadedDay&&maghrib?cityTimeToEpoch(loadedDay,maghrib,prayerTimeZone):0;
  const nightEnd=loadedDay&&tomorrowFajr?cityTimeToEpoch(addCalendarDay(loadedDay,1),tomorrowFajr,prayerTimeZone):0;
