@@ -783,3 +783,36 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-next.anees-mosque-card{background-position:center,center,22% 48%,center;}
  .anees-radio{background-position:center,center,22% 52%,center;}
 }
+
+/* Approved visual direction: documented Quba Mosque photo and self-hosted tasbih scene.
+   Radio background must remain untouched. */
+.anees-next.anees-mosque-card{
+ background:
+ linear-gradient(270deg,#092e25 0%,rgba(9,46,37,.98) 28%,rgba(9,46,37,.75) 50%,rgba(9,46,37,.06) 100%),
+ linear-gradient(0deg,rgba(7,38,30,.30),rgba(7,38,30,.04)),
+ url("https://commons.wikimedia.org/wiki/Special:FilePath/Quba_Mosque_SA.jpg?width=1280") 22% 55% / cover no-repeat,
+ #0f3d2f;
+ background-position:center,center,22% 55%,center;
+}
+.anees-tasbih-shell{border-color:#c9a65c!important;}
+.anees-tasbih-shell:before,
+.dark .anees-tasbih-shell:before{
+ background:
+ linear-gradient(180deg,rgba(6,34,27,.44) 0%,rgba(6,36,28,.55) 40%,rgba(6,34,26,.83) 100%),
+ url("/images/anees-tasbih-approved.webp") center 55% / cover no-repeat,
+ #103a2d;
+}
+.anees-tasbih-shell .anees-tasbih-counter{
+ box-shadow:0 0 0 1px rgba(226,187,108,.65),0 12px 25px rgba(4,20,17,.35),inset 0 1px 25px rgba(8,65,48,.8);
+ background:radial-gradient(circle at 38% 33%,#155e46,#083529 77%);
+ border:2px solid rgba(222,181,96,.85);
+ color:#f8e8c2;
+}
+.anees-tasbih-shell .anees-tasbih-ring{filter:drop-shadow(0 0 2px rgba(215,173,88,.35));}
+.anees-tasbih-shell .anees-tasbih-ring-progress{stroke:#e7c176;}
+.anees-tasbih-shell .anees-tasbih-ring-track{stroke:rgba(226,187,108,.18);}
+.anees-tasbih-shell .anees-tasbih-counter .text-5xl{color:#ffedc8;}
+@media(max-width:767px){
+ .anees-next.anees-mosque-card{background-position:center,center,18% 55%,center;}
+ .anees-tasbih-shell:before{background-position:center,center 55%,center;}
+}
