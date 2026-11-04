@@ -198,12 +198,12 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
         <div className="flex flex-col items-center justify-center my-6">
           <div className="relative">
             {/* Outer Progress Ring SVG */}
-            <svg className="w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90">
+            <svg className="anees-tasbih-ring w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90">
               <circle
                 cx="50%"
                 cy="50%"
                 r="44%"
-                className="stroke-stone-100 dark:stroke-stone-800"
+                className="anees-tasbih-ring-track"
                 strokeWidth="8"
                 fill="none"
               />
@@ -212,7 +212,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
                   cx="50%"
                   cy="50%"
                   r="44%"
-                  className="stroke-emerald-600 dark:stroke-emerald-400 transition-all duration-150"
+                  className="anees-tasbih-ring-progress transition-all duration-150"
                   strokeWidth="8"
                   strokeDasharray="800"
                   strokeDashoffset={800 - (800 * progressPercent) / 100}
@@ -230,7 +230,7 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
               onTouchStart={() => setIsPressing(true)}
               onTouchEnd={() => setIsPressing(false)}
               aria-label="تسبيح"
-              className={`absolute inset-4 sm:inset-5 rounded-full flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-100 shadow-xl ${
+              className={`anees-tasbih-counter absolute inset-4 sm:inset-5 rounded-full flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-100 shadow-xl ${
                 isPressing
                   ? 'bg-emerald-900 text-white scale-96 shadow-inner'
                   : 'bg-radial from-emerald-700 to-emerald-900 dark:from-emerald-800 dark:to-[#064e3b] text-white hover:scale-101 active:scale-95'
