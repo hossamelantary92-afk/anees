@@ -860,3 +860,30 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  url("/images/quba-approved-prayer.webp") left center / 57% 100% no-repeat,#092f26;
  background-position:center,left center,center;
 }}
+
+
+/* Approved November visual refinement: smoother photo merge and legible gold tasbih dial.
+   Do not change Cairo radio photo. */
+.anees-next.anees-mosque-card{
+ background:
+ linear-gradient(90deg,transparent 0%,rgba(9,47,38,.04) 28%,rgba(9,47,38,.28) 42%,rgba(9,47,38,.72) 56%,#092f26 73%),
+ url("/images/quba-approved-prayer.webp") left center / 62% 100% no-repeat,
+ #092f26;
+ background-position:center,left center,center;
+}
+.anees-next.anees-mosque-card .anees-next-text{z-index:2;}
+.anees-tasbih-shell:before,.dark .anees-tasbih-shell:before{
+ background:
+ linear-gradient(180deg,rgba(7,33,26,.12) 0%,rgba(7,33,26,.12) 44%,rgba(7,33,26,.30) 76%,rgba(7,33,26,.58) 100%),
+ url("/images/anees-tasbih-approved.webp") center 79% / cover no-repeat,#103a2d;
+ background-position:center,center 79%,center;
+}
+.anees-tasbih-shell .anees-tasbih-counter{
+ background:radial-gradient(circle at 38% 33%,#125d46,#07382b 76%);
+ border:2px solid #e5bf77;
+ box-shadow:0 0 0 1px rgba(250,215,146,.48),0 10px 25px rgba(2,25,20,.34),inset 0 0 26px rgba(14,90,64,.26);
+}
+@media(max-width:767px){
+ .anees-next.anees-mosque-card{background-position:center,left center,center;}
+ .anees-tasbih-shell:before,.dark .anees-tasbih-shell:before{background-position:center,center 79%,center;}
+}
