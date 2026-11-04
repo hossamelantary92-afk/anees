@@ -69,7 +69,7 @@ export const DhikrCard: React.FC<DhikrCardProps> = ({
 
   return (
     <article
-      className={`group relative rounded-2xl border p-5 sm:p-7 transition-all duration-200 ${
+      className={`anees-dhikr-card group relative rounded-2xl border p-5 sm:p-7 transition-all duration-200 ${
         isCompleted
           ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/30 dark:border-emerald-500/20 shadow-xs'
           : 'bg-white dark:bg-[#121A2D] border-stone-200/90 dark:border-stone-800 shadow-xs hover:border-stone-300 dark:hover:border-stone-700'
