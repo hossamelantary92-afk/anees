@@ -218,6 +218,10 @@ export const SourcesEncyclopedia: React.FC<SourcesEncyclopediaProps> = () => {
           ))}
         </div>
       </section>
+      <aside className="mt-7 text-xs text-stone-500 dark:text-stone-400">
+        <h3 className="font-bold">نسب الصور</h3>
+        <p>مسجد قباء: صورة beendiid C من Wikimedia Commons، بترخيص Creative Commons Attribution 2.0؛ عُرضت بقص وتدرج لوني.</p>
+      </aside>
     </div>
   );
 };
