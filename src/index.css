@@ -1018,3 +1018,26 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
 .anees-friday-dropdown-trigger:hover{background:rgba(190,154,87,.08);}
 .anees-friday-dropdown-trigger:focus-visible{outline:2px solid #edcd8c;outline-offset:-3px;}
 @media(max-width:420px){.anees-friday-intro{font-size:11px;gap:4px;}.anees-friday-dropdown-trigger{padding:11px 12px;}}
+
+
+/* Clear visual language for dua icon and the selected after-prayer session. */
+.anees-category-dua-emoji{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:26px;height:26px;flex:none;font-size:24px;line-height:1;
+ filter:drop-shadow(0 1px 1px rgba(1,23,17,.2));
+}
+.anees-prayer-choice{
+ font-weight:800!important;font-size:16px!important;
+ line-height:1.4;color:#fae8c3!important;
+ border:1px solid rgba(222,184,105,.78)!important;
+ border-radius:13px!important;
+ background:#184a3b!important;
+ padding-inline:12px!important;min-height:47px;
+ text-align:right;direction:rtl;
+}
+.anees-prayer-choice option{font-weight:700;background:#123f32;color:#f8e4c0;}
+.anees-prayer-choice:focus-visible{outline:2px solid #f5d796;outline-offset:3px;}
+@media(max-width:420px){
+ .anees-category-dua-emoji{width:23px;height:23px;font-size:21px;}
+ .anees-prayer-choice{font-size:15px!important;min-height:45px;}
+}
