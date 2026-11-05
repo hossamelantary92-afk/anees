@@ -15,11 +15,29 @@ const initialCounts = () => Object.fromEntries(ALL_ADHKAR.map(d => [d.id, d.coun
 export default function App() {
   const [countDate, setCountDate] = useState(localDay);
   useEffect(() => {
-    const check = () => { const today = localDay(); if (today !== countDate) { setRemainingCounts(initialCounts()); setCountDate(today); } };
-    const timer = window.setInterval(check, 30000);
+    const check = () => {
+      const today = localDay();
+      if (today !== countDate) {
+        // All normal adhkar and five independent after-prayer sessions start fresh.
+        // Historical progress is archived before the new day and favorites are untouched.
+        setRemainingCounts(initialCounts());
+        setCountDate(today);
+      }
+    };
+    // Trigger at local midnight, not up to 30 seconds later. Focus/visibility checks
+    // handle phones sleeping through the timer or changes to device time zones.
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const midnightTimer = window.setTimeout(check, nextMidnight.getTime() - now.getTime() + 50);
+    const fallbackTimer = window.setInterval(check, 30000);
     window.addEventListener('focus', check);
     document.addEventListener('visibilitychange', check);
-    return () => { clearInterval(timer); window.removeEventListener('focus', check); document.removeEventListener('visibilitychange', check); };
+    return () => {
+      window.clearTimeout(midnightTimer);
+      window.clearInterval(fallbackTimer);
+      window.removeEventListener('focus', check);
+      document.removeEventListener('visibilitychange', check);
+    };
   }, [countDate]);
   // Theme state
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -215,6 +233,7 @@ export default function App() {
         <div hidden={activeTab !== 'adhkar'}><PrayerRadio /></div>
         <div hidden={activeTab !== 'adhkar' && activeTab !== 'favorites'}>
           <AdhkarSection
+            currentDay={countDate}
             favoritesOnly={activeTab === 'favorites'}
             remainingCounts={displayCounts}
             onCountDecrement={handleCountDecrement}
