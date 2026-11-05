@@ -2,7 +2,7 @@ import {TrackerDialog} from './TrackerDialog';
 import {FavoriteReciters} from './FavoriteReciters';
 import { storage } from '../utils/storage';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, SlidersHorizontal, BookOpen, List, ChevronRight, ChevronLeft, ChevronDown, RotateCcw } from 'lucide-react';
+import { Search, X, SlidersHorizontal, BookOpen, List, ChevronRight, ChevronLeft, ChevronDown, RotateCcw, HeartHandshake } from 'lucide-react';
 import { DHIKR_CATEGORIES, ALL_ADHKAR, DhikrItem } from '../data/adhkarData';
 import { DhikrCard } from './DhikrCard';
 interface Props {
@@ -32,6 +32,7 @@ export const AdhkarSection: React.FC<Props> = props => {
  const [favoriteView,setFavoriteView]=useState<'adhkar'|'reciters'>('adhkar');
  const [selectedCategory, setCategory] = useState('morning');
  const [selectedDuaGroup,setSelectedDuaGroup]=useState('');
+ const [lastDuaGroup,setLastDuaGroup]=useState('prophets');
  const [readerOpen,setReaderOpen]=useState(true);
  const [openPicker,setOpenPicker]=useState<'dua'|'dhikr'|null>(null);
  const pickerRef=useRef<HTMLDivElement>(null);
@@ -70,8 +71,16 @@ export const AdhkarSection: React.FC<Props> = props => {
   setReaderOpen(true);
   setOpenPicker(null);
   setSelectedDuaGroup(value);
-  if(value){setCategory(value==='daily'?'dailyLife':'dailyDuas');setQuery('');setSearchOpen(false);setFilter('all');setConfirmReset(false);setPositions(p=>({...p,['dua:'+value+':all']:0}));}
+  if(value){setLastDuaGroup(value);setQuery('');setSearchOpen(false);setFilter('all');setConfirmReset(false);setPositions(p=>({...p,['dua:'+value+':all']:0}));}
  };
+ const toggleReader=(target:'dua'|'dhikr')=>{
+  setOpenPicker(null);
+  const currentlyActive=readerOpen?(selectedDuaGroup?'dua':'dhikr'):null;
+  if(currentlyActive===target){setReaderOpen(false);setSearchOpen(false);setConfirmReset(false);return;}
+  if(target==='dua'){selectDua(lastDuaGroup);}
+  else{changeCategory(selectedCategory);}
+ };
+
 
  useEffect(() => { const open = (event: Event) => { const category = (event as CustomEvent).detail; if (category === 'morning' || category === 'evening') { setReaderOpen(true); setCategory(category); setSelectedDuaGroup(''); setQuery(''); setDisplaySettings(p=>({...p,adhkar:{...p.adhkar,filter:'all'}})); } }; window.addEventListener('hisn-open-category', open); return () => window.removeEventListener('hisn-open-category',open); }, []);
  const category = props.favoritesOnly ? 'favorites' : selectedCategory;
@@ -158,32 +167,28 @@ export const AdhkarSection: React.FC<Props> = props => {
    {props.favoritesOnly&&<><h1 className="text-2xl font-bold mb-4">المفضلة</h1><div className="grid grid-cols-2 gap-2 mb-5">{(['adhkar','reciters'] as const).map((v,i)=><button key={v} aria-pressed={favoriteView===v} onClick={()=>setFavoriteView(v)} className={`${btn} min-h-12 ${favoriteView===v?'bg-emerald-800 text-white':''}`}>{i?'قرّاء القرآن':'الأذكار المفضلة'}</button>)}</div></>}
    {props.favoritesOnly&&favoriteView==='reciters'&&<FavoriteReciters/>}
    <div hidden={props.favoritesOnly&&favoriteView==='reciters'}>
-     {!props.favoritesOnly&&<div className="anees-two-selectors" dir="rtl" ref={pickerRef}>
-      {readerOpen&&<button type="button" className="anees-picker-close" title="إغلاق القراءة والعودة لاختيار القسم" aria-label="إغلاق القراءة والعودة لاختيار القسم" onClick={()=>{setReaderOpen(false);setOpenPicker(null);setSearchOpen(false);setToolsOpen(false);setConfirmReset(false);}}><X size={17}/></button>}
-      <div className="anees-category-picker">
-       <span className="anees-picker-title">✦ الأدعية</span>
-       <div className="anees-picker-menu">
-        <button type="button" className="anees-picker-trigger" aria-label="اختيار قسم الأدعية" aria-expanded={openPicker==='dua'} aria-controls="anees-dua-options" onClick={()=>setOpenPicker(v=>v==='dua'?null:'dua')}>
-         <span>{duaGroups.find(d=>d.id===selectedDuaGroup)?.label||'اختر قسم الأدعية'}</span><ChevronDown size={18} className={openPicker==='dua'?'anees-picker-chevron-open':''}/>
-        </button>
-        {openPicker==='dua'&&<div id="anees-dua-options" className="anees-picker-options" aria-label="أقسام الأدعية">
-         {duaGroups.map(group=><button type="button" key={group.id} aria-current={selectedDuaGroup===group.id?'true':undefined} onClick={()=>selectDua(group.id)}>{group.label}</button>)}
-        </div>}
-       </div>
+     {!props.favoritesOnly&&<div className="anees-category-cards" dir="rtl" ref={pickerRef}>
+      <div className={`anees-category-card ${readerOpen&&!!selectedDuaGroup?'is-active':''}`}>
+       <button type="button" className="anees-category-card-main" aria-expanded={readerOpen&&!!selectedDuaGroup} aria-label="عرض أو طي الأدعية" onClick={()=>toggleReader('dua')}>
+        <HeartHandshake size={26} className="anees-category-card-icon"/>
+        <span className="anees-category-card-text"><strong>الأدعية</strong><small>{duaGroups.find(g=>g.id===(selectedDuaGroup||lastDuaGroup))?.label||'اختر قسم الأدعية'}</small></span>
+       </button>
+       <button type="button" className="anees-category-card-menu-btn" aria-expanded={openPicker==='dua'} aria-label="اختيار قسم الأدعية" aria-controls="anees-dua-options" onClick={()=>setOpenPicker(v=>v==='dua'?null:'dua')}><ChevronDown size={19} className={openPicker==='dua'?'anees-picker-chevron-open':''}/></button>
+       {openPicker==='dua'&&<div id="anees-dua-options" className="anees-category-card-options">
+        {duaGroups.map(group=><button type="button" key={group.id} aria-current={readerOpen&&selectedDuaGroup===group.id?'true':undefined} onClick={()=>selectDua(group.id)}>{group.label}</button>)}
+       </div>}
       </div>
-      <div className="anees-category-picker">
-       <span className="anees-picker-title"><BookOpen size={18}/> الأذكار</span>
-       <div className="anees-picker-menu">
-        <button type="button" className="anees-picker-trigger" aria-label="اختيار قسم الأذكار" aria-expanded={openPicker==='dhikr'} aria-controls="anees-dhikr-options" onClick={()=>setOpenPicker(v=>v==='dhikr'?null:'dhikr')}>
-         <span>{selectedDuaGroup?'اختر قسم الأذكار':DHIKR_CATEGORIES.find(cat=>cat.id===selectedCategory)?.name||'أذكار الصباح'}</span><ChevronDown size={18} className={openPicker==='dhikr'?'anees-picker-chevron-open':''}/>
-        </button>
-        {openPicker==='dhikr'&&<div id="anees-dhikr-options" className="anees-picker-options" aria-label="أقسام الأذكار">
-         {DHIKR_CATEGORIES.filter(cat=>cat.id!=='dailyDuas'&&cat.id!=='dailyLife').map(cat=><button type="button" key={cat.id} aria-current={!selectedDuaGroup&&selectedCategory===cat.id?'true':undefined} onClick={()=>changeCategory(cat.id)}>{cat.name}</button>)}
-        </div>}
-       </div>
+      <div className={`anees-category-card ${readerOpen&&!selectedDuaGroup?'is-active':''}`}>
+       <button type="button" className="anees-category-card-main" aria-expanded={readerOpen&&!selectedDuaGroup} aria-label="عرض أو طي الأذكار" onClick={()=>toggleReader('dhikr')}>
+        <BookOpen size={26} className="anees-category-card-icon"/>
+        <span className="anees-category-card-text"><strong>الأذكار</strong><small>{DHIKR_CATEGORIES.find(cat=>cat.id===selectedCategory)?.name||'أذكار الصباح'}</small></span>
+       </button>
+       <button type="button" className="anees-category-card-menu-btn" aria-expanded={openPicker==='dhikr'} aria-label="اختيار قسم الأذكار" aria-controls="anees-dhikr-options" onClick={()=>setOpenPicker(v=>v==='dhikr'?null:'dhikr')}><ChevronDown size={19} className={openPicker==='dhikr'?'anees-picker-chevron-open':''}/></button>
+       {openPicker==='dhikr'&&<div id="anees-dhikr-options" className="anees-category-card-options">
+        {DHIKR_CATEGORIES.filter(cat=>cat.id!=='dailyDuas'&&cat.id!=='dailyLife').map(cat=><button type="button" key={cat.id} aria-current={readerOpen&&!selectedDuaGroup&&selectedCategory===cat.id?'true':undefined} onClick={()=>changeCategory(cat.id)}>{cat.name}</button>)}
+       </div>}
       </div>
      </div>}
-     {!props.favoritesOnly&&readerOpen&&!!selectedDuaGroup&&<button type="button" className="anees-back-to-adhkar" onClick={()=>{changeCategory('morning');setPositions(p=>({...p,'morning:all':0}));}}><ChevronRight size={17}/> العودة لأذكار الصباح</button>}
      {actionNotice&&<p className="anees-action-notice" role="status" aria-live="polite">{actionNotice}</p>}
      {(props.favoritesOnly||readerOpen)&&<>
      <div className="mb-4" aria-label="تقدم الورد"><div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400"><span>{query?'نتائج البحث: ':''}المكتمل {completed} من {base.length}</span><div className="flex items-center gap-2"><span className="text-emerald-700 dark:text-emerald-300 font-semibold">{progress}%</span>{!query&&category!=='favorites'&&<button onClick={()=>setConfirmReset(true)} aria-label="إعادة الورد" className="utility-action"><RotateCcw size={17}/></button>}</div></div><div role="progressbar" aria-label="تقدم الورد" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 transition-all" style={{width:`${progress}%`}}/></div></div>
