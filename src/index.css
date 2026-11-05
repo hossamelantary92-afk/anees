@@ -964,25 +964,18 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
 }
 
 
-/* Subtle reading header instead of intrusive close rows or a second footer button. */
-.anees-reader-heading{
- display:flex;align-items:center;justify-content:space-between;gap:8px;
- margin:0 0 12px;padding:1px 3px 7px;
- border-bottom:1px solid rgba(196,162,93,.22);
- color:#997a47;
-}
-.anees-reader-heading-label{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:750;min-width:0;}
-.anees-reader-heading-label svg{color:#bc9b60;flex-shrink:0;}
-.anees-reader-dismiss-icon{
- width:38px;height:38px;flex-shrink:0;
+/* Reader close lives within the category selector border: no redundant row. */
+.anees-two-selectors{position:relative;}
+.anees-picker-close{
+ position:absolute;left:12px;top:-17px;z-index:25;
  display:inline-flex;align-items:center;justify-content:center;
- border-radius:50%;
- color:#b39057;background:transparent;border:1px solid rgba(196,162,93,.35);
+ width:34px;height:34px;border-radius:50%;
+ border:1px solid #bc995e;
+ background:#103e31;color:#e9c98e;
+ box-shadow:0 2px 9px rgba(3,28,21,.23);
  cursor:pointer;touch-action:manipulation;
- transition:background-color .15s ease,border-color .15s ease;
+ transition:background-color .15s ease,color .15s ease;
 }
-.anees-reader-dismiss-icon:hover{background:rgba(181,148,83,.14);border-color:rgba(196,162,93,.75);}
-.anees-reader-dismiss-icon:focus-visible{outline:2px solid #d9b777;outline-offset:2px;}
-.dark .anees-reader-heading{color:#d7bf8d;}
-.dark .anees-reader-dismiss-icon{color:#ecd4a0;}
-@media(max-width:420px){.anees-reader-heading{margin-bottom:10px;}.anees-reader-heading-label{font-size:12px;}}
+.anees-picker-close:hover{background:#27634c;color:#fff0d0;}
+.anees-picker-close:focus-visible{outline:2px solid #e9c98e;outline-offset:2px;}
+@media(max-width:420px){.anees-picker-close{left:11px;top:-15px;width:32px;height:32px;}}
