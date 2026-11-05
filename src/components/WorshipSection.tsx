@@ -92,11 +92,16 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  adhkar:<><h2 className="font-bold mb-3">أذكار اليوم</h2><div className="space-y-2">{(['morning','evening'] as const).map((v,i)=><button key={v} className="worship-check w-full" disabled={day!==today} onClick={()=>onOpenAdhkar(v)}><span className="flex gap-2 items-center">{i?<Moon size={18}/>:<Sun size={18}/>}أذكار {i?'المساء':'الصباح'}</span><span className="text-sm">{summary?`${summary[v].completed} / ${summary[v].total}`:'—'}</span></button>)}</div></>,
  deeds:<><h2 className="font-bold mb-3">أعمال الخير</h2><div className="grid grid-cols-2 gap-2">{goodDeeds.map(v=><React.Fragment key={v}>{check(v,record.deeds.includes(v),()=>toggle('deeds',v))}</React.Fragment>)}</div></>,
  fasting:<><h2 className="font-bold mb-3">الصيام</h2><label className="block text-sm mb-3">نوع الصيام<select aria-label="نوع الصيام" className="worship-input w-full mt-2" value={record.fasting?.kind||'رمضان'} onChange={e=>patch({fasting:{completed:record.fasting?.completed||false,kind:e.target.value}})}>{fastingKinds.map(v=><option key={v}>{v}</option>)}</select></label><div className="space-y-2">{check('أتممت يوم الصيام',!!record.fasting?.completed,()=>patch({fasting:{kind:record.fasting?.kind||'رمضان',completed:!record.fasting?.completed}}),'علّم عليها بعد إتمام اليوم')}</div></>,
- friday:<><h2 className="font-bold mb-3">سنن الجمعة</h2><p className="text-xs opacity-75 mb-3">تظهر من مغرب الخميس حتى نهاية الجمعة. هذه قائمة متابعة اختيارية وليست حصرًا للسنن.</p><div className="space-y-2">
+ friday:<><h2 className="font-bold mb-3">سنن الجمعة</h2><p className="text-xs opacity-75 mb-3">يوم الجمعة فرصة للإكثار من الذكر والصلاة على النبي ﷺ، فاغتنم ساعاته بالطاعة والدعاء.</p><div className="space-y-2">
  {[
-  ['kahf','قراءة سورة الكهف','يُشرع قراءتها في يوم الجمعة وليلته'],
+  ['kahf','قراءة سورة الكهف','من الأعمال المستحبة في يوم الجمعة وليلته'],
   ['ghusl','الاغتسال للجمعة','آكد في حق من يذهب لصلاة الجمعة'],
-  ['early','التبكير للمسجد','والإنصات للخطبة'],
+  ['perfume','التطيّب للجمعة','لمن يذهب إلى المسجد، مع مراعاة آداب الخروج للصلاة'],
+  ['clothes','لبس الثياب الحسنة والنظيفة','التجمّل والتطهّر عند الذهاب لصلاة الجمعة'],
+  ['early','التبكير للمسجد','الحرص على الحضور مبكرًا قبل الخطبة'],
+  ['beforeKhutbah','الصلاة قبل صعود الإمام للمنبر','يصلي ما تيسّر له عند وصوله مبكرًا'],
+  ['listen','الإنصات للخطبة','ترك الكلام والانشغال أثناء خطبة الجمعة'],
+  ['noStepping','عدم تخطّي رقاب المصلّين','وعدم التفريق بين الجالسين'],
   ['salawat','الإكثار من الصلاة على النبي ﷺ','اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ'],
   ['dua','الدعاء وتحري ساعة الإجابة','مع الاختلاف في تحديد ساعة الإجابة']
  ].map(([id,label,detail])=><React.Fragment key={id}>{check(label,((fridayRecord.fridayActs||[]).includes(id)||(id==='salawat'&&!!fridayRecord.fridayDone)),()=>toggleFridayAct(id),detail)}</React.Fragment>)}
