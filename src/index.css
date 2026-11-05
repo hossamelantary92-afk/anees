@@ -962,3 +962,26 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-picker-trigger{min-height:46px;padding:9px 10px;font-size:13px;}
  .anees-picker-options button{min-height:44px;}
 }
+
+
+/* Reader dismissal: keep both category menus while collapsing all reading tools/cards. */
+.anees-reader-close-row{display:flex;align-items:center;justify-content:flex-start;margin:4px 0 14px;}
+.anees-reader-close-button{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ min-height:42px;padding:8px 13px;border:1px solid rgba(199,164,94,.66);
+ border-radius:12px;background:#17483a;color:#f5e1b5;
+ font-size:13px;font-weight:800;touch-action:manipulation;
+}
+.anees-reader-close-button svg{color:#f4c98e;}
+.anees-reader-close-hint{font-weight:500;opacity:.87;}
+.anees-reader-bottom-close{
+ display:flex;align-items:center;justify-content:center;gap:7px;
+ width:100%;margin:16px 0 4px;padding:11px 12px;min-height:44px;
+ border:1px solid rgba(195,162,97,.55);border-radius:12px;
+ background:rgba(20,70,54,.13);color:#976e3a;font-size:13px;font-weight:750;
+ touch-action:manipulation;
+}
+.dark .anees-reader-bottom-close{color:#ecd2a0;background:#123f31;}
+.anees-reader-close-button:hover,.anees-reader-bottom-close:hover{background:#22634b;color:#fff1c9;}
+.anees-reader-close-button:focus-visible,.anees-reader-bottom-close:focus-visible{outline:2px solid #ddb778;outline-offset:3px;}
+@media(max-width:420px){.anees-reader-close-hint{display:none;}.anees-reader-close-button{min-height:44px;}}
