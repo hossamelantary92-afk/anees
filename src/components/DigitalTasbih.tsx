@@ -282,30 +282,34 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
           </div>
 
           {/* Sound & Controls */}
-          <div className="flex items-center gap-2">
+          <div className="anees-tasbih-quick-actions flex items-center gap-2">
             <button
+              type="button"
               onClick={toggleSound}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+              aria-pressed={soundEnabled}
+              aria-label={soundEnabled?'كتم صوت السبحة':'تفعيل صوت السبحة'}
+              className={`anees-tasbih-small-action ${soundEnabled?'anees-tasbih-sound-on':'anees-tasbih-sound-off'} inline-flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors`}
             >
               {soundEnabled ? (
                 <>
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <Volume2 className="w-4 h-4" />
                   <span>الصوت مفعّل</span>
                 </>
               ) : (
                 <>
-                  <VolumeX className="w-3.5 h-3.5 text-stone-400" />
+                  <VolumeX className="w-4 h-4" />
                   <span>الصوت مكتوم</span>
                 </>
               )}
             </button>
 
             <button
+              type="button"
               onClick={handleResetCurrent}
               title="تصفير العداد الحالي"
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+              className="anees-tasbih-small-action inline-flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-4 h-4" />
               <span>تصفير الحالي</span>
             </button>
           </div>
