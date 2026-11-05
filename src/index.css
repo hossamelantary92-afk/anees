@@ -1000,3 +1000,21 @@ body,.font-tajawal{font-family:var(--anees-interface-font),'Tajawal',sans-serif;
  .anees-category-card-main{padding:13px 16px;min-height:80px;}
  .anees-category-card-text strong{font-size:20px;}
 }
+
+
+/* Friday sunnahs: a calm two-line invitation and compact disclosure with the existing checklist. */
+.anees-friday-intro{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:right;direction:rtl;line-height:1.75;color:#e0d2af;}
+.anees-friday-intro span{display:block;max-width:100%;}
+.anees-friday-dropdown{border:1px solid rgba(202,169,103,.66);border-radius:15px;background:rgba(9,50,40,.36);overflow:hidden;}
+.anees-friday-dropdown-trigger{list-style:none;cursor:pointer;touch-action:manipulation;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;color:#f2dfba;font-size:14px;font-weight:800;}
+.anees-friday-dropdown-trigger::-webkit-details-marker{display:none;}
+.anees-friday-dropdown-trigger::marker{content:'';}
+.anees-friday-dropdown-label{display:inline-flex;align-items:center;gap:11px;flex-wrap:wrap;}
+.anees-friday-dropdown-count{font-size:12px;font-weight:600;color:#d9be86;}
+.anees-friday-dropdown-chevron{flex-shrink:0;color:#e2b86c;transition:transform .2s ease;transform:rotate(-90deg);}
+.anees-friday-dropdown[open] .anees-friday-dropdown-chevron{transform:rotate(90deg);}
+.anees-friday-dropdown[open] .anees-friday-dropdown-trigger{border-bottom:1px solid rgba(202,169,103,.3);}
+.anees-friday-checklist{padding:13px 12px 12px;}
+.anees-friday-dropdown-trigger:hover{background:rgba(190,154,87,.08);}
+.anees-friday-dropdown-trigger:focus-visible{outline:2px solid #edcd8c;outline-offset:-3px;}
+@media(max-width:420px){.anees-friday-intro{font-size:11px;gap:4px;}.anees-friday-dropdown-trigger{padding:11px 12px;}}

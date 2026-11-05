@@ -92,7 +92,7 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
  adhkar:<><h2 className="font-bold mb-3">أذكار اليوم</h2><div className="space-y-2">{(['morning','evening'] as const).map((v,i)=><button key={v} className="worship-check w-full" disabled={day!==today} onClick={()=>onOpenAdhkar(v)}><span className="flex gap-2 items-center">{i?<Moon size={18}/>:<Sun size={18}/>}أذكار {i?'المساء':'الصباح'}</span><span className="text-sm">{summary?`${summary[v].completed} / ${summary[v].total}`:'—'}</span></button>)}</div></>,
  deeds:<><h2 className="font-bold mb-3">أعمال الخير</h2><div className="grid grid-cols-2 gap-2">{goodDeeds.map(v=><React.Fragment key={v}>{check(v,record.deeds.includes(v),()=>toggle('deeds',v))}</React.Fragment>)}</div></>,
  fasting:<><h2 className="font-bold mb-3">الصيام</h2><label className="block text-sm mb-3">نوع الصيام<select aria-label="نوع الصيام" className="worship-input w-full mt-2" value={record.fasting?.kind||'رمضان'} onChange={e=>patch({fasting:{completed:record.fasting?.completed||false,kind:e.target.value}})}>{fastingKinds.map(v=><option key={v}>{v}</option>)}</select></label><div className="space-y-2">{check('أتممت يوم الصيام',!!record.fasting?.completed,()=>patch({fasting:{kind:record.fasting?.kind||'رمضان',completed:!record.fasting?.completed}}),'علّم عليها بعد إتمام اليوم')}</div></>,
- friday:<><h2 className="font-bold mb-3">سنن الجمعة</h2><p className="text-xs opacity-75 mb-3">يوم الجمعة فرصة للإكثار من الذكر والصلاة على النبي ﷺ، فاغتنم ساعاته بالطاعة والدعاء.</p><div className="space-y-2">
+ friday:<><h2 className="font-bold mb-3">سنن الجمعة</h2><p className="anees-friday-intro text-xs opacity-75 mb-3"><span>يوم الجمعة فرصة للإكثار من الذكر والصلاة على النبي ﷺ،</span><span>فاغتنم ساعاته بالطاعة والدعاء.</span></p><details className="anees-friday-dropdown"><summary className="anees-friday-dropdown-trigger"><span className="anees-friday-dropdown-label">عرض سنن الجمعة <span className="anees-friday-dropdown-count">{new Set([...(fridayRecord.fridayActs||[]),...(fridayRecord.fridayDone?['salawat']:[])]).size} / 10</span></span><ChevronLeft size={19} className="anees-friday-dropdown-chevron"/></summary><div className="anees-friday-checklist space-y-2">
  {[
   ['kahf','قراءة سورة الكهف','من الأعمال المستحبة في يوم الجمعة وليلته'],
   ['ghusl','الاغتسال للجمعة','آكد في حق من يذهب لصلاة الجمعة'],
@@ -105,7 +105,7 @@ export const WorshipSection:React.FC<Props>=({today,counts,onOpenAdhkar})=>{
   ['salawat','الإكثار من الصلاة على النبي ﷺ','اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ'],
   ['dua','الدعاء وتحري ساعة الإجابة','مع الاختلاف في تحديد ساعة الإجابة']
  ].map(([id,label,detail])=><React.Fragment key={id}>{check(label,((fridayRecord.fridayActs||[]).includes(id)||(id==='salawat'&&!!fridayRecord.fridayDone)),()=>toggleFridayAct(id),detail)}</React.Fragment>)}
- </div></>,
+ </div></details></>,
  custom:<><h2 className="font-bold mb-3">عاداتي الخاصة</h2><div className="space-y-2">{dayPlan.custom.filter(v=>!plan.hiddenCustom?.includes(v.id)).map(v=><React.Fragment key={v.id}>{check(v.label,record.custom.includes(v.id),()=>toggle('custom',v.id))}</React.Fragment>)}</div></>
  };
  const order=[...plan.order||sectionOrder,...sectionOrder.filter(k=>!(plan.order||sectionOrder).includes(k))];
