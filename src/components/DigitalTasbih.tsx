@@ -138,7 +138,8 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
     : selectedPhrase;
 
   // Percentage within current target
-  const progressPercent = target > 0 ? Math.min(100, Math.round((count / target) * 100)) : 100;
+  const progressPercent = target > 0 ? Math.max(0, Math.min(1, count / target)) : 0;
+  const circumference = 2 * Math.PI * 45;
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -198,24 +199,24 @@ export const DigitalTasbih: React.FC<DigitalTasbihProps> = ({
         <div className="flex flex-col items-center justify-center my-6">
           <div className="relative">
             {/* Outer Progress Ring SVG */}
-            <svg className="anees-tasbih-ring w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90">
+            <svg className="anees-tasbih-ring w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90" viewBox="0 0 100 100">
               <circle
-                cx="50%"
-                cy="50%"
-                r="44%"
+                cx="50"
+                cy="50"
+                r="45"
                 className="anees-tasbih-ring-track"
-                strokeWidth="8"
+                strokeWidth="2.7"
                 fill="none"
               />
               {target > 0 && (
                 <circle
-                  cx="50%"
-                  cy="50%"
-                  r="44%"
+                  cx="50"
+                  cy="50"
+                  r="45"
                   className="anees-tasbih-ring-progress transition-all duration-150"
-                  strokeWidth="8"
-                  strokeDasharray="800"
-                  strokeDashoffset={800 - (800 * progressPercent) / 100}
+                  strokeWidth="2.7"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={circumference * (1 - progressPercent)}
                   strokeLinecap="round"
                   fill="none"
                 />
