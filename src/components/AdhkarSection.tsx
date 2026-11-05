@@ -2,10 +2,11 @@ import {TrackerDialog} from './TrackerDialog';
 import {FavoriteReciters} from './FavoriteReciters';
 import { storage } from '../utils/storage';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, SlidersHorizontal, BookOpen, List, ChevronRight, ChevronLeft, ChevronDown, RotateCcw, HeartHandshake } from 'lucide-react';
+import { Search, X, SlidersHorizontal, BookOpen, List, ChevronRight, ChevronLeft, ChevronDown, RotateCcw } from 'lucide-react';
 import { DHIKR_CATEGORIES, ALL_ADHKAR, DhikrItem } from '../data/adhkarData';
 import { DhikrCard } from './DhikrCard';
 interface Props {
+ currentDay: string;
  favoritesOnly?: boolean;
  remainingCounts: Record<string, number>;
  onCountDecrement: (id: string) => void;
@@ -47,13 +48,20 @@ export const AdhkarSection: React.FC<Props> = props => {
   document.addEventListener('keydown',closeOnEscape);
   return()=>{document.removeEventListener('pointerdown',closeOnOutside);document.removeEventListener('keydown',closeOnEscape);};
  },[]);
- const [duaCounts,setDuaCounts]=useState<Record<string,number>>(()=>{
+ // Keep the day and its counters together, so yesterday's completed duas cannot leak
+ // into today's reader after midnight (including when the app stays open).
+ const [duaRecord,setDuaRecord]=useState<{date:string;counts:Record<string,number>}>(()=>{
   try{
    const record=JSON.parse(storage.getItem('anees_dua_scope_counts')||'null');
-   const today=new Date().toLocaleDateString('en-CA');
-   return record?.date===today&&record?.counts&&typeof record.counts==='object'?record.counts:{};
-  }catch{return {};}
+   return {date:props.currentDay,counts:record?.date===props.currentDay&&record?.counts&&typeof record.counts==='object'&&!Array.isArray(record.counts)?record.counts:{}};
+  }catch{return {date:props.currentDay,counts:{}};}
  });
+ const duaCounts=duaRecord.date===props.currentDay?duaRecord.counts:{};
+ const setDuaCounts=(change:(counts:Record<string,number>)=>Record<string,number>)=>
+  setDuaRecord(previous=>({date:props.currentDay,counts:change(previous.date===props.currentDay?previous.counts:{})}));
+ useEffect(()=>{
+  setDuaRecord(previous=>previous.date===props.currentDay?previous:{date:props.currentDay,counts:{}});
+ },[props.currentDay]);
  const duaGroups=[
   {id:'prophets',label:'أدعية الأنبياء'},
   {id:'daily',label:'أدعية الحياة اليومية'},
@@ -94,7 +102,15 @@ export const AdhkarSection: React.FC<Props> = props => {
  const setMode=(mode:'list'|'focus')=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],mode}}));
  const setFilter=(filter:'all'|'pending'|'completed')=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],filter}}));
  const setAutoNext=(autoNext:boolean)=>setDisplaySettings(p=>({...p,[scope]:{...p[scope],autoNext}}));
- const [positions, setPositions] = useState<Record<string, number>>(() => ({...saved<Record<string,number>>('hisn_positions',{}), 'morning:all':0}));
+ const [positions, setPositions] = useState<Record<string, number>>(() =>
+  storage.getItem('hisn_positions_date')===props.currentDay
+   ? {...saved<Record<string,number>>('hisn_positions',{}), 'morning:all':0}
+   : {'morning:all':0});
+ useEffect(()=>{
+  if(storage.getItem('hisn_positions_date')!==props.currentDay){
+   setPositions({'morning:all':0});
+  }
+ },[props.currentDay]);
  const [favorites, setFavorites] = useState<string[]>(() => saved('hisn_favorites',[]));
  const [query, setQuery] = useState('');
  const [prayer, setPrayer] = useState(() => saved('hisn_prayer','الفجر'));
@@ -104,7 +120,7 @@ export const AdhkarSection: React.FC<Props> = props => {
  const [actionNotice,setActionNotice]=useState('');
  useEffect(()=>{if(!actionNotice)return;const id=window.setTimeout(()=>setActionNotice(''),2200);return()=>window.clearTimeout(id);},[actionNotice]);
  useEffect(() => { storage.setItem('hisn_category',JSON.stringify(category)); },[category]);
- useEffect(()=>{storage.setItem('anees_dua_scope_counts',JSON.stringify({date:new Date().toLocaleDateString('en-CA'),counts:duaCounts}));},[duaCounts]);
+ useEffect(()=>{storage.setItem('anees_dua_scope_counts',JSON.stringify(duaRecord));},[duaRecord]);
  const scopedCount=(d:DhikrItem)=>selectedDuaGroup&&!props.favoritesOnly?(duaCounts[selectedDuaGroup+':'+d.id]??d.count):(props.remainingCounts[d.id]??d.count);
  const changeDuaCount=(id:string,action:'decrement'|'undo'|'reset')=>{
   if(!selectedDuaGroup||props.favoritesOnly)return;
@@ -131,7 +147,7 @@ export const AdhkarSection: React.FC<Props> = props => {
   setActionNotice('تمت إعادة ضبط أدعية هذا القسم');
  };
  useEffect(() => { storage.setItem('hisn_display_adhkar',JSON.stringify(displaySettings.adhkar)); storage.setItem('hisn_display_favorites',JSON.stringify(displaySettings.favorites)); },[displaySettings]);
- useEffect(() => { storage.setItem('hisn_positions',JSON.stringify(positions)); },[positions]);
+ useEffect(() => { storage.setItem('hisn_positions',JSON.stringify(positions)); storage.setItem('hisn_positions_date',props.currentDay); },[positions,props.currentDay]);
  useEffect(() => { storage.setItem('hisn_favorites',JSON.stringify(favorites)); },[favorites]);
  useEffect(() => { storage.setItem('hisn_prayer',JSON.stringify(prayer)); window.dispatchEvent(new Event('hisn-prayer')); },[prayer]);
  useEffect(() => { setQuery(''); setConfirmReset(false); setToolsOpen(false); setSearchOpen(false); }, [props.favoritesOnly]);
@@ -170,7 +186,7 @@ export const AdhkarSection: React.FC<Props> = props => {
      {!props.favoritesOnly&&<div className="anees-category-cards" dir="rtl" ref={pickerRef}>
       <div className={`anees-category-card ${readerOpen&&!!selectedDuaGroup?'is-active':''}`}>
        <button type="button" className="anees-category-card-main" aria-expanded={readerOpen&&!!selectedDuaGroup} aria-label="عرض أو طي الأدعية" onClick={()=>toggleReader('dua')}>
-        <HeartHandshake size={26} className="anees-category-card-icon"/>
+        <span className="anees-category-dua-emoji" role="img" aria-label="يدان مرفوعتان بالدعاء">🤲</span>
         <span className="anees-category-card-text"><strong>الأدعية</strong><small>{duaGroups.find(g=>g.id===(selectedDuaGroup||lastDuaGroup))?.label||'اختر قسم الأدعية'}</small></span>
        </button>
        <button type="button" className="anees-category-card-menu-btn" aria-expanded={openPicker==='dua'} aria-label="اختيار قسم الأدعية" aria-controls="anees-dua-options" onClick={()=>setOpenPicker(v=>v==='dua'?null:'dua')}><ChevronDown size={19} className={openPicker==='dua'?'anees-picker-chevron-open':''}/></button>
@@ -192,7 +208,7 @@ export const AdhkarSection: React.FC<Props> = props => {
      {actionNotice&&<p className="anees-action-notice" role="status" aria-live="polite">{actionNotice}</p>}
      {(props.favoritesOnly||readerOpen)&&<>
      <div className="mb-4" aria-label="تقدم الورد"><div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400"><span>{query?'نتائج البحث: ':''}المكتمل {completed} من {base.length}</span><div className="flex items-center gap-2"><span className="text-emerald-700 dark:text-emerald-300 font-semibold">{progress}%</span>{!query&&category!=='favorites'&&<button onClick={()=>setConfirmReset(true)} aria-label="إعادة الورد" className="utility-action"><RotateCcw size={17}/></button>}</div></div><div role="progressbar" aria-label="تقدم الورد" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 transition-all" style={{width:`${progress}%`}}/></div></div>
-     {!query&&category==='afterPrayer'&&<div className="flex items-center gap-3 mb-4 text-sm"><label htmlFor="prayer">ورد الصلاة</label><select id="prayer" value={prayer} onChange={e=>{const nextPrayer=e.target.value;setPrayer(nextPrayer);setQuery('');setFilter('all');setConfirmReset(false);setPositions(prev=>({...prev,['afterPrayer:'+nextPrayer+':all']:0}));}} className="worship-input flex-1 min-w-0">{['الفجر','الظهر','العصر','المغرب','العشاء'].map(v=><option key={v}>{v}</option>)}</select><span className="text-xs text-stone-500">تقدم مستقل</span></div>}
+     {!query&&category==='afterPrayer'&&<div className="flex items-center gap-3 mb-4 text-sm"><label htmlFor="prayer">ورد الصلاة</label><select id="prayer" value={prayer} onChange={e=>{const nextPrayer=e.target.value;setPrayer(nextPrayer);setQuery('');setFilter('all');setConfirmReset(false);setPositions(prev=>({...prev,['afterPrayer:'+nextPrayer+':all']:0}));}} className="worship-input anees-prayer-choice flex-1 min-w-0">{['الفجر','الظهر','العصر','المغرب','العشاء'].map(v=><option key={v}>{v}</option>)}</select><span className="text-xs text-stone-500">تقدم مستقل</span></div>}
      <div className="flex items-center justify-between gap-2 mb-4" aria-label="أدوات القراءة"><button aria-expanded={searchOpen} aria-controls="adhkar-search" onClick={()=>{setSearchOpen(!searchOpen);if(searchOpen)setQuery('');}} aria-label={searchOpen?'إغلاق البحث':'البحث في الأذكار'} className={`utility-action border border-stone-200 dark:border-stone-700 ${searchOpen?'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200':''}`}>{searchOpen?<X size={20}/>:<Search size={20}/>}</button><div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-900"><button aria-pressed={mode==='focus'} onClick={()=>setMode('focus')} className={`utility-action text-sm ${mode==='focus'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><BookOpen size={18}/>قراءة</button><button aria-pressed={mode==='list'} onClick={()=>setMode('list')} className={`utility-action text-sm ${mode==='list'?'bg-white dark:bg-stone-800 shadow-sm font-semibold':''}`}><List size={18}/>قائمة</button></div><button aria-expanded={toolsOpen} onClick={()=>setToolsOpen(true)} aria-label="أدوات العرض" className="utility-action border border-stone-200 dark:border-stone-700 relative"><SlidersHorizontal size={20}/>{filter!=='all'&&<span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-600"/>}</button></div>
      {searchOpen&&<div id="adhkar-search" className="mb-4"><label className="sr-only" htmlFor="dhikr-query">البحث في الأذكار</label><input id="dhikr-query" autoFocus value={query} onChange={e=>{setQuery(e.target.value);setFilter('all');}} placeholder={props.favoritesOnly?'ابحث في أذكارك المفضلة…':'ابحث عن ذكر أو دعاء…'} className="worship-input w-full text-sm"/></div>}
      {filter!=='all'&&<button className="text-xs text-emerald-700 dark:text-emerald-300 mb-4 min-h-11" onClick={()=>setFilter('all')}>تصفية: {filter==='pending'?'المتبقية':'المكتملة'} · إلغاء التصفية ×</button>}
