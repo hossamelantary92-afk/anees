@@ -1,4 +1,5 @@
 import {formatCalendarDate,calendarPreference} from '../utils/calendar';
+import { storage } from '../utils/storage';
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Radio, Play, Pause, Moon, Clock3, LocateFixed, Compass, CalendarClock, X, Sunrise, Sunset, MoonStar } from 'lucide-react';
 
@@ -6,8 +7,10 @@ type Prayer = { name:string; key:string; time:string };
 const names = [{name:'الفجر',key:'Fajr'},{name:'الظهر',key:'Dhuhr'},{name:'العصر',key:'Asr'},{name:'المغرب',key:'Maghrib'},{name:'العشاء',key:'Isha'}];
 const RADIO = ['https://stream.radiojar.com/8s5u5tpdtwzuv'];
 const cities = [{label:'الرياض',lat:24.7136,lon:46.6753},{label:'مكة المكرمة',lat:21.3891,lon:39.8579},{label:'المدينة المنورة',lat:24.5247,lon:39.5692},{label:'جدة',lat:21.4858,lon:39.1925},{label:'القاهرة',lat:30.0444,lon:31.2357},{label:'الإسكندرية',lat:31.2001,lon:29.9187}];
-const saved = () => {try {const value=JSON.parse(localStorage.getItem('anees_prayer_location') || 'null');return value && typeof value.lat==='number' && typeof value.lon==='number' && typeof value.label==='string'?value:null;}catch{return null;}};
-const locationMode = (): 'auto'|'manual' => localStorage.getItem('anees_prayer_location_mode')==='manual'?'manual':'auto';
+const CURRENT_LOCATION_LABEL = 'موقعي الحالي';
+const LOCATION_REQUEST_KEY = 'anees_prayer_location_requested';
+const saved = () => {try {const value=JSON.parse(storage.getItem('anees_prayer_location') || 'null');return value && typeof value.lat==='number' && typeof value.lon==='number' && typeof value.label==='string'?value:null;}catch{return null;}};
+const locationMode = (): 'auto'|'manual' => storage.getItem('anees_prayer_location_mode')==='manual'?'manual':'auto';
 // Convert a city's wall-clock prayer time into an absolute instant, including DST.
 const zonedParts = (date: Date, timeZone: string) => {
  const parts = new Intl.DateTimeFormat('en-GB', {timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
@@ -47,8 +50,6 @@ const formatZonedTime=(instant:number,zone:string)=>new Intl.DateTimeFormat('ar-
 export function PrayerRadio(){
  const [loc,setLoc]=useState<{label:string;lat:number;lon:number}>(()=>saved() || cities[0]);
  const [mode,setMode]=useState<'auto'|'manual'>(locationMode);
- const lastLocationCheck=useRef(0);
- const modeRef=useRef(mode);
  const locationRequestId=useRef(0);
  const [locating,setLocating]=useState(false);
  const [locationError,setLocationError]=useState('');
@@ -74,54 +75,47 @@ export function PrayerRadio(){
      else setCompassMessage('لم يتم السماح بمستشعر اتجاه الجهاز. زاوية القبلة من الشمال متاحة.');
    }catch{setCompassMessage('تعذر تشغيل مستشعر الاتجاه؛ يمكنك استخدام زاوية القبلة من الشمال.');}
  };
- useEffect(()=>{modeRef.current=mode;try{localStorage.setItem('anees_prayer_location_mode',mode);}catch{}},[mode]);
  const setManualCity=(city:typeof cities[number])=>{
    // Invalidate any pending GPS callback so it cannot override the manual choice.
    locationRequestId.current++;
    setLocating(false);
    setLocationError('');
-   modeRef.current='manual';
    setMode('manual');
-   try{localStorage.setItem('anees_prayer_location_mode','manual');}catch{}
+   storage.setItem('anees_prayer_location_mode','manual');
    setLoc(city);
  };
- const refreshLocation=(force=false,fromUser=false)=>{
-   if(modeRef.current!=='auto' && !fromUser)return;
+ const locate=()=>{
    if(!navigator.geolocation){
      setLocationError('تحديد الموقع غير مدعوم في هذا المتصفح. اختر مدينة من القائمة.');
      return;
    }
-   const current=Date.now();
-   if(!force && current-lastLocationCheck.current<15*60*1000)return;
+   // Even a denial or timeout should leave future launches on the saved location.
+   storage.setItem(LOCATION_REQUEST_KEY,'1');
    // Do not mark success or switch the selector before iOS actually returns coordinates.
    const request=++locationRequestId.current;
    setLocating(true);
    setLocationError('');
    navigator.geolocation.getCurrentPosition(({coords})=>{
      if(request!==locationRequestId.current)return;
-     if(!fromUser && modeRef.current!=='auto')return;
      setLocating(false);
      if(!Number.isFinite(coords.latitude)||!Number.isFinite(coords.longitude)){
        setLocationError('لم نتمكن من قراءة إحداثيات الموقع. جرّب مرة أخرى.');
        return;
      }
-     lastLocationCheck.current=Date.now();
-     modeRef.current='auto';
      setMode('auto');
-     try{localStorage.setItem('anees_prayer_location_mode','auto');}catch{}
+     storage.setItem('anees_prayer_location_mode','auto');
      setLocationError('');
      setLoc(previous=>
-       previous.label==='موقعي الحالي' &&
+       previous.label===CURRENT_LOCATION_LABEL &&
        Math.abs(previous.lat-coords.latitude)<0.005 &&
        Math.abs(previous.lon-coords.longitude)<0.005
          ? previous
-         : {label:'موقعي الحالي',lat:coords.latitude,lon:coords.longitude}
+         : {label:CURRENT_LOCATION_LABEL,lat:coords.latitude,lon:coords.longitude}
      );
    },(failure)=>{
      if(request!==locationRequestId.current)return;
      setLocating(false);
      // Leave the previously selected city and its prayer times intact on failure.
-     lastLocationCheck.current=0;
      setLocationError(failure.code===1
        ? 'إذن الموقع غير مفعّل لـ«أنيس». فعّله من إعدادات الموقع على الآيفون، ثم اضغط موقعي الحالي مجددًا.'
        : failure.code===3
@@ -130,15 +124,11 @@ export function PrayerRadio(){
    },{enableHighAccuracy:false,timeout:15000,maximumAge:0});
  };
  useEffect(()=>{
-   if(modeRef.current==='auto')refreshLocation(true);
-   const onReturn=()=>{if(document.visibilityState==='visible')refreshLocation();};
-   window.addEventListener('focus',onReturn);
-   document.addEventListener('visibilitychange',onReturn);
-   return()=>{
-     locationRequestId.current++;
-     window.removeEventListener('focus',onReturn);
-     document.removeEventListener('visibilitychange',onReturn);
-   };
+   // Existing installations with saved GPS coordinates have already requested access.
+   if (mode === 'auto' && loc.label !== CURRENT_LOCATION_LABEL && !storage.getItem(LOCATION_REQUEST_KEY)) {
+     locate();
+   }
+   return()=>{locationRequestId.current++;};
  },[]);
  // Keep a complete timetable snapshot, so city, timezone, countdown and times
  // switch together on one React commit instead of showing half-updated data.
@@ -158,7 +148,7 @@ export function PrayerRadio(){
  const [day,setDay]=useState(()=>dayKey(new Date(),'Asia/Riyadh'));
  useEffect(()=>{const id=window.setInterval(()=>{const instant=Date.now();setNow(instant);setDay(dayKey(new Date(instant),prayerTimeZone));},1000);return()=>clearInterval(id);},[prayerTimeZone]);
  useEffect(()=>{
-   localStorage.setItem('anees_prayer_location',JSON.stringify(loc));
+   storage.setItem('anees_prayer_location',JSON.stringify(loc));
    // Keep the last complete schedule visible while the replacement is being fetched.
    // Clearing it made the prayer heading flash and disrupted the countdown.
    const ctl=new AbortController();setError('');setUpdatingPrayers(true);
@@ -197,7 +187,6 @@ export function PrayerRadio(){
  const target=next?.instant || 0;
  const remaining=Math.max(0,Math.floor((target-now)/1000));
  const countdown=[Math.floor(remaining/3600),Math.floor(remaining%3600/60),remaining%60].map(n=>String(n).padStart(2,'0')).join(':');
- const locate=()=>refreshLocation(true,true);
  const qibla=Math.round(qiblaBearing(loc.lat,loc.lon));
  const qiblaOffset=compassHeading===null?null:((qibla-compassHeading+540)%360)-180;
  const qiblaAligned=qiblaOffset!==null&&Math.abs(qiblaOffset)<=7;
